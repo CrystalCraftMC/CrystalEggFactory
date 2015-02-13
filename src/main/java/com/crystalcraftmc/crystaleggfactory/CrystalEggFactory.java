@@ -363,8 +363,7 @@ public class CrystalEggFactory extends JavaPlugin {
 				return false;
 			}
 		}
-		else
-			return false;
+		return false;
 	}
 	public boolean checkMobType(String mob, Player p) {
 		for(int i = 0; i < mobTypeList.length; i++) {
