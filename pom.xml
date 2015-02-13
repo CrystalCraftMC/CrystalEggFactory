@@ -19,13 +19,13 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.crystalcraftmc</groupId>
-	<artifactId>KillCount</artifactId>
+	<artifactId>CrystalEggFactory</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<profiles>
 		<profile>
-			<id>com.crystalcraftmc.killcount</id>
+			<id>com.crystalcraftmc.crystaleggfactory</id>
 			<build>
-				<finalName>KillCount</finalName>
+				<finalName>CrystalEggFactory</finalName>
 				<directory>src/main/java/</directory>
 				<resources>
 					<resource>
