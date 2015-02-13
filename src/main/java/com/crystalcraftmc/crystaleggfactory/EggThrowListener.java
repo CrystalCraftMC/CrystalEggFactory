@@ -17,6 +17,24 @@
 
 package com.crystalcraftmc.crystaleggfactory;
 
+import java.util.ArrayList;
+
+import org.bukkit.ChatColor;
+import org.bukkit.Color;
+import org.bukkit.FireworkEffect;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.FireworkEffect.Type;
+import org.bukkit.block.Block;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.FireworkMeta;
+import org.bukkit.inventory.meta.ItemMeta;
+
 public class EggThrowListener implements Listener {
 	private CakeAnimation accessFields;
 	private ItemStack[] icon;
