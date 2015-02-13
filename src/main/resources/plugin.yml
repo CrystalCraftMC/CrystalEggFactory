@@ -1,0 +1,76 @@
+name: Egg
+main: com.gmail.www.woodrow73.egg.Egg
+version: 0.1
+commands:
+   egg:
+      description:
+         Used to place spawn eggs in your inventory which in the future will not be able to change spawners
+      usage:
+         <command> <mob-type> <amountEggs>
+      permissions:
+         - admin
+         - owner
+      permission-message:
+         you do not have <permission>
+   egglist:
+      description:
+         Will display all possible values of the mob-type attribute
+      usage:
+         <command>
+      permissions:
+         - admin
+         - owner
+      permission-message:
+         you do not have <permission>
+
+groups:
+   admin:
+      permission:
+         Permission.Egg.*: true
+   owner:
+      permission:
+         Permission.Egg.*: true
+   jwf:
+      permission:
+         Permission.Egg.*: true
+      group:
+      - owner
+   Jacc734:
+      permission:
+         Permission.Egg.*: true
+      group:
+      - admin
+   InfiniteCorners:
+      permission:
+         Permission.Egg.*: true
+      group:
+      - admin
+   Raeganrr123:
+      permission:
+         Permission.Egg.*: true
+      group:
+      - admin
+   Ultimateafs:
+      permission:
+         Permission.Egg.*: true
+      group:
+      - admin
+group:
+   admin:
+      permission:
+         Permission.Egg.*: true
+   owner:
+      permission:
+         Permission.Egg.*: true
+
+permissions:
+   Permission.Egg.egglist:
+      default: 
+         false
+      description:
+         Will display all possible values of the mob-type attribute
+   Permission.Egg.egg:
+      default:
+         false
+      description:
+         Used to place spawn eggs in your inventory which in the future will not be able to change spawners
