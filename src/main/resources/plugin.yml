@@ -1,5 +1,5 @@
-name: Egg
-main: com.gmail.www.woodrow73.egg.Egg
+name: CrystalEggFactory
+main: com.crystalcraftmc.crystaleggfactory.CrystalEggFactory
 version: 0.1
 commands:
    egg:
