@@ -103,11 +103,11 @@ public class EggThrowListener implements Listener {
 					ItemStack is = p.getItemInHand();
 					boolean matchesNerfedEgg = false;
 					for(int i = 0; i < 27; i++) {
-						if(is.isSimilar(icon[i]))
+						if(is.getData().getData() == icon[i].getData().getData())
 							matchesNerfedEgg = true;
 					}
 					
-					if(matchesNerfedEgg) {
+					if(matchesNerfedEgg && is.containsEnchantment(Enchantment.ARROW_INFINITE)) {
 						e.getPlayer().sendMessage("Cancelled event");
 						e.setCancelled(true);
 					}
