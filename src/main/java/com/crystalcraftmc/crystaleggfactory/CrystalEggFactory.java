@@ -362,11 +362,6 @@ public class CrystalEggFactory extends JavaPlugin {
 				}
 				return false;
 			}
-			else {
-				p.sendMessage(ChatColor.RED + "You do not have permissions for Permission.Egg.egg and" +
-							" Permission.Egg.egglist.");
-				return true;
-			}
 		}
 		else
 			return false;
