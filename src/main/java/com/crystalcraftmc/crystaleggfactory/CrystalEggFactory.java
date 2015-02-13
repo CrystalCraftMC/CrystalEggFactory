@@ -297,6 +297,7 @@ public class CrystalEggFactory extends JavaPlugin {
 											"Error; your 2nd argument: \'" +
 										ChatColor.GOLD + args[1] + ChatColor.AQUA + "\' is not" +
 											" between 0-2304 inclusive.");
+									return false;
 								}
 							}
 							else {
@@ -357,7 +358,8 @@ public class CrystalEggFactory extends JavaPlugin {
 				}
 				else {
 					p.sendMessage(ChatColor.AQUA + "Error; " +
-								"the /egg command takes 3 arguments - <\"egg\"> <mob-type> <amount of eggs>.");
+								"the /egg command takes 2 arguments - <mob-type> and <amount>.  Type" +
+								" <egglist> to view all valid mob-type arguments.");
 					return false;
 				}
 				return false;
