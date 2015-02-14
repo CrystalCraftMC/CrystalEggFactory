@@ -28,6 +28,7 @@ import org.bukkit.block.Block;
 public class CakeAnimation {
 	private Block globalB;
 	private Timer tim;
+	private CrystalEggFactory plugin;
 	private int accumulator;
 	public final int NUMCAKES = 5; //MAY CHANGE NUMBER - will also automatically check NUMCAKES blocks
 									//above the PlayerInteractEvent to make sure clear before proceeding
@@ -35,7 +36,8 @@ public class CakeAnimation {
 	private final int CAKEFRAMERATE = 153; //cakes show up CAKEFRAMERATE milliseconds inbetween eachother
 	
 //####################################################################
-	public CakeAnimation(Block b) {
+	public CakeAnimation(Block b, CrystalEggFactory plugin) {
+		this.plugin = plugin;
 		globalB = b;
 		accumulator = 0;
 		tim = new Timer(CAKEFRAMERATE, new CakeUpdateListener());
@@ -49,14 +51,21 @@ public class CakeAnimation {
 			accumulator++;
 			Location loc = globalB.getLocation();
 			loc.setY(globalB.getLocation().getY()+accumulator);
-			Block bbb = loc.getBlock();
-			bbb.setType(Material.CAKE_BLOCK);
-			
+			final Block bbb = loc.getBlock();
+			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+                public void run() {
+                    bbb.setType(Material.CAKE_BLOCK);
+                }
+            }, 5L);
 			if(accumulator >= NUMCAKES)
 				stopTim();
 		}
+			
 	}
 	public void stopTim() {
 		tim.stop();
+	}
+	public void hop() {
+		
 	}
 }
