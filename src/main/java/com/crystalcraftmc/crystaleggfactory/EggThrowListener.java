@@ -46,10 +46,10 @@ public class EggThrowListener implements Listener {
 						(byte)90, (byte)91, (byte)92, (byte)93,
 						(byte)94, (byte)95, (byte)96, (byte)98,
 						(byte)100, (byte)101, (byte)120 };
-	
+	private CrystalEggFactory globalEgg;
 	public EggThrowListener(CrystalEggFactory egg) {
 		egg.getServer().getPluginManager().registerEvents(this, egg);
-		
+		globalEgg = egg;
 		accessFields = new CakeAnimation();
 		fire = new ItemStack(Material.FIREWORK, 1);
 		FireworkMeta fm = (FireworkMeta) fire.getItemMeta();
@@ -87,7 +87,7 @@ public class EggThrowListener implements Listener {
 						e.getPlayer().getItemInHand().isSimilar(fire)) {
 				if(e.getPlayer().getItemInHand().getEnchantmentLevel(Enchantment.ARROW_FIRE) == 1) {
 					if(this.theBlocksAboveClear(e.getClickedBlock())) {
-						new CakeAnimation(e.getClickedBlock());
+						new CakeAnimation(e.getClickedBlock(), globalEgg);
 					}
 					else {
 						e.getPlayer().sendMessage(ChatColor.RED + "Error; " + ChatColor.GOLD +
