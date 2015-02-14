@@ -16,56 +16,36 @@
 
 package com.crystalcraftmc.crystaleggfactory;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-import javax.swing.Timer;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 
 public class CakeAnimation {
-	private Block globalB;
-	private Timer tim;
 	private CrystalEggFactory plugin;
-	private int accumulator;
 	public final int NUMCAKES = 5; //MAY CHANGE NUMBER - will also automatically check NUMCAKES blocks
 									//above the PlayerInteractEvent to make sure clear before proceeding
 	
-	private final int CAKEFRAMERATE = 153; //cakes show up CAKEFRAMERATE milliseconds inbetween eachother
-	
+	private final int CAKEFRAMERATE = 5; //cakes show up CAKEFRAMERATE ticks inbetween eachother
 //####################################################################
 	public CakeAnimation(Block b, CrystalEggFactory plugin) {
 		this.plugin = plugin;
-		globalB = b;
-		accumulator = 0;
-		tim = new Timer(CAKEFRAMERATE, new CakeUpdateListener());
-		tim.start();
+		Location loc = b.getLocation();
+		for(int i = 0; i < 5; i++) {
+			loc.setY(b.getLocation().getY()+(i+1));
+			this.hailMary(loc.getBlock(), i);
+		}
 	}
 	public CakeAnimation() {
 		//to create a low-resource accessFields object in EggThrowListener class
 	}
-	private class CakeUpdateListener implements ActionListener {
-		public void actionPerformed(ActionEvent e) {
-			accumulator++;
-			Location loc = globalB.getLocation();
-			loc.setY(globalB.getLocation().getY()+accumulator);
-			final Block bbb = loc.getBlock();
-			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-                public void run() {
-                    bbb.setType(Material.CAKE_BLOCK);
-                }
-            }, 5L);
-			if(accumulator >= NUMCAKES)
-				stopTim();
-		}
-			
+	public void hailMary(Block b, int z) {
+		final Block bw = b; //has to be Final for runnable code to work
+		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+            public void run() {
+                bw.setType(Material.CAKE_BLOCK);
+            }
+        }, (long)((CAKEFRAMERATE*z)+1));
 	}
-	public void stopTim() {
-		tim.stop();
-	}
-	public void hop() {
-		
-	}
+	
 }
