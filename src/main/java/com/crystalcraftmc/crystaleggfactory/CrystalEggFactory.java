@@ -15,9 +15,13 @@
 + */
 package com.crystalcraftmc.crystaleggfactory;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Scanner;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
@@ -27,9 +31,7 @@ import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Villager;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.FireworkMeta;
@@ -37,6 +39,10 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class CrystalEggFactory extends JavaPlugin {
+	
+	public boolean overworldBan, netherBan, endBan;
+	
+	public ArrayList<EggOutlawArea> jail = new ArrayList<EggOutlawArea>();
 	
 	private String[] raeAlias = {"WildRaeganrr", "wildRae", "Rae", "CakeQueen", "RaeCaker123", 
 						"RaeCaker", "R", "W", "wr"};
@@ -84,6 +90,7 @@ public class CrystalEggFactory extends JavaPlugin {
 	private MobType mobType = MobType.NoMob;
 	//private EggThrowListener etl;
 	public void onEnable() {
+		this.initializeWorldBan();
 		getLogger().info("Egg plugin enabled.");
 		new EggThrowListener(this);
 		
@@ -250,19 +257,12 @@ public class CrystalEggFactory extends JavaPlugin {
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 		if(sender instanceof Player) {
 			Player p = ((Player) sender);
-			if(p.hasPermission("Permission.Egg.egglist") &&
-						p.hasPermission("Permission.Egg.egg") || 2 == 2) { 
-				
-				if(args.length == 0) {
-					if(label.equalsIgnoreCase("egglist")) {
-						this.displayMobTypes(p);
-						return true;
-					}
-					else {
-						return false;
-					}
+			if(p.isOp()) {
+				if(args.length == 0 && label.equalsIgnoreCase("egglist")) {
+					this.displayMobTypes(p);
+					return true;
 				}
-				else if(args.length == 2) {
+				else if(args.length == 2 && label.equalsIgnoreCase("egg")) {
 					if(label.equalsIgnoreCase("egg")) {
 						boolean spawnRae = false;
 						for(int i = 0; i < raeAlias.length; i++) {
@@ -286,7 +286,7 @@ public class CrystalEggFactory extends JavaPlugin {
 									}
 									else {
 										p.sendMessage(ChatColor.AQUA + "Error; you asked for \'" +
-												ChatColor.GOLD + String.valueOf(raeNum) + ChatColor.AQUA +
+											ChatColor.GOLD + String.valueOf(raeNum) + ChatColor.AQUA +
 												"\' Rae spawn eggs, but only have " + ChatColor.RED +
 												String.valueOf(invSpace) + ChatColor.AQUA + " free slots in" +
 												" your inventory.");
@@ -296,14 +296,14 @@ public class CrystalEggFactory extends JavaPlugin {
 								else {
 									p.sendMessage(ChatColor.AQUA + 
 											"Error; your 2nd argument: \'" +
-										ChatColor.GOLD + args[1] + ChatColor.AQUA + "\' is not" +
+											ChatColor.GOLD + args[1] + ChatColor.AQUA + "\' is not" +
 											" between 0-2304 inclusive.");
 									return false;
 								}
 							}
 							else {
 								p.sendMessage(ChatColor.AQUA + "Error; your 2nd argument: \'" +
-										ChatColor.GOLD + args[1] + ChatColor.AQUA + "\' is not an Integer.");
+									ChatColor.GOLD + args[1] + ChatColor.AQUA + "\' is not an Integer.");
 								return false;
 							}
 						}
@@ -335,7 +335,7 @@ public class CrystalEggFactory extends JavaPlugin {
 								}
 								else {
 									p.sendMessage(ChatColor.ITALIC + "Error; " +
-											"the amount argument must be between 0-2304 inclusive.");
+										"the amount argument must be between 0-2304 inclusive.");
 									return false;
 								}
 							}
@@ -348,23 +348,80 @@ public class CrystalEggFactory extends JavaPlugin {
 						else {
 							p.sendMessage(ChatColor.LIGHT_PURPLE + "Error; invalid mob-type argument." +
 												" Enter <\"egglist\"> to view all" +
-												" valid mob-type arguments.");
+								" valid mob-type arguments.");
 							return false;
 						}
 					}
 					else{
 						p.sendMessage(ChatColor.GOLD + "Error; your first argument was not \"egg\".");
 						return false;
-				    }
+						}
 				}
-				else {
-					p.sendMessage(ChatColor.AQUA + "Error; " +
-								"the /egg command takes 2 arguments - <mob-type> and <amount>.  Type" +
-								" <egglist> to view all valid mob-type arguments.");
-					return false;
+				else if(label.equals("eggbanworld") && args.length == 2) {
+					if((args[0].equalsIgnoreCase("overworld") ||
+							args[0].equalsIgnoreCase("nether") ||
+							args[0].equalsIgnoreCase("end")) && (args[1].equalsIgnoreCase("true") ||
+									args[1].equalsIgnoreCase("false"))) {
+						File file = new File("eggbanworld.txt");
+						if(!file.exists()) {
+							try{
+								PrintWriter pw = new PrintWriter("eggbanworld.txt");
+								pw.println("overworld=false");
+								pw.flush();
+								pw.println("nether=false");
+								pw.flush();
+								pw.println("end=false");
+								pw.flush();
+								pw.close();
+							}catch(IOException e) { e.printStackTrace(); }
+						}
+						ArrayList<String> contents = new ArrayList<String>();
+						try{
+							Scanner in = new Scanner(file);
+							while(in.hasNext()) {
+								contents.add(in.nextLine());
+							}
+							in.close();
+							switch(args[0].charAt(0)) {
+							case 'o':
+								contents.set(0, "overworld=".concat(args[1].toLowerCase()));
+								overworldBan = args[1].charAt(0) == 'f' ? false : true;
+								break;
+							case 'n':
+								contents.set(0, "nether=".concat(args[1].toLowerCase()));
+								netherBan = args[1].charAt(0) == 'f' ? false : true;
+								break;
+							case 'e':
+								contents.set(0, "end=".concat(args[1].toLowerCase()));
+								endBan = args[1].charAt(0) == 'f' ? false : true;
+								break;
+							}
+							PrintWriter pw = new PrintWriter("eggbanworld.txt");
+							pw.println(contents.get(0));
+							pw.flush();
+							pw.println(contents.get(1));
+							pw.flush();
+							pw.println(contents.get(2));
+							pw.flush();
+							pw.close();
+						}catch(IOException e) { e.printStackTrace(); }
+					}
+					else
+						return false;
+				}
+				else if(label.equals("eggbanlist") && args.length == 0) {
+					p.sendMessage(ChatColor.GREEN + "Overworld Egg Ban=" + String.valueOf(overworldBan));
+					p.sendMessage(ChatColor.RED + "Nether Egg Ban=" + String.valueOf(netherBan));
+					p.sendMessage(ChatColor.BLUE + "End Egg Ban=" + String.valueOf(endBan));
 				}
 				return false;
+			
 			}
+			else {
+				p.sendMessage(ChatColor.GOLD + "You do not have permission to use that command");
+				return true;
+			}
+			
 		}
 		return false;
 	}
@@ -524,5 +581,30 @@ public class CrystalEggFactory extends JavaPlugin {
 			return false;
 		}
 	}
-	
+	public void initializeWorldBan() {
+		File file = new File("eggbanworld.txt");
+		if(!file.exists()) {
+			try{
+				PrintWriter pw = new PrintWriter("eggbanworld.txt");
+				pw.println("overworld=false");
+				pw.flush();
+				pw.println("nether=false");
+				pw.flush();
+				pw.println("end=false");
+				pw.flush();
+				pw.close();
+			}catch(IOException e) { e.printStackTrace(); }
+		}
+		ArrayList<String> contents = new ArrayList<String>();
+		try{
+			Scanner in = new Scanner(file);
+			while(in.hasNext()) {
+				contents.add(in.nextLine());
+			}
+			in.close();
+			overworldBan = contents.get(0).charAt(10) == 'f' ? false : true;
+			netherBan = contents.get(1).charAt(7) == 'f' ? false : true;
+			endBan = contents.get(2).charAt(4) == 'f' ? false : true;
+		}catch(IOException e) { e.printStackTrace(); }
+	}
 }
