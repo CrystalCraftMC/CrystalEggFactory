@@ -1,76 +1,34 @@
 name: CrystalEggFactory
 main: com.crystalcraftmc.crystaleggfactory.CrystalEggFactory
-version: 0.1
+version: 0.2
 commands:
    egg:
       description:
          Used to place spawn eggs in your inventory which in the future will not be able to change spawners
       usage:
-         <command> <mob-type> <amountEggs>
-      permissions:
-         - admin
-         - owner
-      permission-message:
-         you do not have <permission>
+         /<command> <mob-type> <amountEggs>
    egglist:
       description:
          Will display all possible values of the mob-type attribute
       usage:
-         <command>
-      permissions:
-         - admin
-         - owner
-      permission-message:
-         you do not have <permission>
-
-groups:
-   admin:
-      permission:
-         Permission.Egg.*: true
-   owner:
-      permission:
-         Permission.Egg.*: true
-   jwf:
-      permission:
-         Permission.Egg.*: true
-      group:
-      - owner
-   Jacc734:
-      permission:
-         Permission.Egg.*: true
-      group:
-      - admin
-   InfiniteCorners:
-      permission:
-         Permission.Egg.*: true
-      group:
-      - admin
-   Raeganrr123:
-      permission:
-         Permission.Egg.*: true
-      group:
-      - admin
-   Ultimateafs:
-      permission:
-         Permission.Egg.*: true
-      group:
-      - admin
-group:
-   admin:
-      permission:
-         Permission.Egg.*: true
-   owner:
-      permission:
-         Permission.Egg.*: true
-
-permissions:
-   Permission.Egg.egglist:
-      default: 
-         false
+         /<command>
+   eggban:
       description:
-         Will display all possible values of the mob-type attribute
-   Permission.Egg.egg:
-      default:
-         false
+         Used to ban the use of eggs in a particular area
+      usage:
+         /<command><x1Coord><z1Coord><x2Coord><z2Coord><name_id>
+   eggbanlist:
       description:
-         Used to place spawn eggs in your inventory which in the future will not be able to change spawners
+         Lists the names and locations of all egg-banned areas
+      usage:
+         /<command>
+   eggunban:
+      description:
+         Unbans egg-use in the specified id_name area
+      usage:
+         /<command><name_id>
+   eggbanworld:
+      description:
+         Allow/disallow eggs in a certain world (banned areas still apply)
+      usage:
+         /<command><end/overworld/nether><true/false>
