@@ -16,7 +16,11 @@
 package com.crystalcraftmc.crystaleggfactory;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,6 +32,7 @@ import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
 import org.bukkit.FireworkEffect.Type;
 import org.bukkit.Material;
+import org.bukkit.World.Environment;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
@@ -91,6 +96,7 @@ public class CrystalEggFactory extends JavaPlugin {
 	//private EggThrowListener etl;
 	public void onEnable() {
 		this.initializeWorldBan();
+		this.initializeSerFile();
 		getLogger().info("Egg plugin enabled.");
 		new EggThrowListener(this);
 		
@@ -428,7 +434,67 @@ public class CrystalEggFactory extends JavaPlugin {
 					p.sendMessage(ChatColor.GREEN + "Overworld Egg Ban=" + String.valueOf(overworldBan));
 					p.sendMessage(ChatColor.RED + "Nether Egg Ban=" + String.valueOf(netherBan));
 					p.sendMessage(ChatColor.BLUE + "End Egg Ban=" + String.valueOf(endBan));
-					
+					for(int i = 0; i < jail.size(); i++) {
+						p.sendMessage(this.getColor(i) + jail.get(i).toString());
+					}
+					return true;
+				}
+				else if(label.equals("eggban") && args.length == 5) {
+					boolean isValid = true;
+					for(int i = 0; i < 4; i++) {
+						if(!isDouble(args[i]))
+							isValid = false;
+					}
+					if(!isValid) {
+						p.sendMessage(ChatColor.GOLD + "Error; the first 4 arguments were not all valid numbers");
+						return false;
+					}
+					else {
+						for(int i = 0; i < jail.size(); i++) {
+							if(args[4].equalsIgnoreCase(jail.get(i).getID())) {
+								p.sendMessage(ChatColor.GOLD + "Error; " + ChatColor.RED + args[4] +
+										ChatColor.GOLD + " is already an existing ban-area ID.");
+								return true;
+							}
+						}
+						String worldName = "";
+						if(p.getWorld().getEnvironment() == Environment.NORMAL)
+							worldName = "overworld";
+						if(p.getWorld().getEnvironment() == Environment.NETHER)
+							worldName = "nether";
+						if(p.getWorld().getEnvironment() == Environment.THE_END)
+							worldName = "end";
+						jail.add(new EggOutlawArea(Double.parseDouble(args[0]), Double.parseDouble(args[1]),
+								Double.parseDouble(args[2]), Double.parseDouble(args[3]), args[4], worldName));
+						updateSerFile();
+						p.sendMessage(ChatColor.GOLD + "Area " + ChatColor.AQUA + args[4] + ChatColor.GOLD +
+								" Between " + ChatColor.BLUE + "(x, z) " + ChatColor.RED + "(" + ChatColor.LIGHT_PURPLE + 
+								args[0] + ChatColor.RED +
+								", " + ChatColor.LIGHT_PURPLE + args[1] + ChatColor.RED + ")" + ChatColor.GOLD + " to " +
+								ChatColor.RED + "(" + ChatColor.LIGHT_PURPLE + args[2] + ChatColor.RED +
+								", " + ChatColor.LIGHT_PURPLE + args[3] + ChatColor.RED + ")" + ChatColor.GOLD + " is now" +
+								" off limits for the use of spawn eggs.");
+						return true;
+					}
+				}
+				else if(label.equalsIgnoreCase("eggunban") && args.length == 1) {
+					int removeIndex=-1;
+					for(int i = 0; i < jail.size(); i++) {
+						if(jail.get(i).getID().equals(args[0]))
+							removeIndex = i;
+					}
+					if(removeIndex != -1) {
+						jail.remove(removeIndex);
+						this.updateSerFile();
+						p.sendMessage(ChatColor.AQUA + args[0] + ChatColor.BLUE + " Has successfully" +
+								" been removed from the ban-area-list.");
+					}
+					else {
+						p.sendMessage(ChatColor.GOLD + "Error; " + ChatColor.RED + args[0] +
+								ChatColor.GOLD + " is not an existing egg-ban-area ID.");
+						p.sendMessage(ChatColor.GREEN + "Use " + ChatColor.AQUA + "/eggbanlist" +
+								ChatColor.GREEN + " to see existing banned areas.");
+					}
 					return true;
 				}
 				return false;
@@ -598,6 +664,14 @@ public class CrystalEggFactory extends JavaPlugin {
 			return false;
 		}
 	}
+	public boolean isDouble(String str) {
+		try{
+			Double.parseDouble(str);
+			return true;
+		}catch(NumberFormatException e) {
+			return false;
+		}
+	}
 	public void initializeWorldBan() {
 		File file = new File("eggbanworld.txt");
 		if(!file.exists()) {
@@ -619,9 +693,70 @@ public class CrystalEggFactory extends JavaPlugin {
 				contents.add(in.nextLine());
 			}
 			in.close();
-			overworldBan = contents.get(0).charAt(10) == 'f' ? false : true;
-			netherBan = contents.get(1).charAt(7) == 'f' ? false : true;
-			endBan = contents.get(2).charAt(4) == 'f' ? false : true;
+			CharSequence cs = "false";
+			overworldBan = contents.get(0).contains(cs) ? false : true;
+			netherBan = contents.get(1).contains(cs) ? false : true;
+			endBan = contents.get(2).contains(cs) ? false : true;
 		}catch(IOException e) { e.printStackTrace(); }
+	}
+	/*public boolean addBanArea(double xCorner, double zCorner, String nameArea, String world) {
+        EggOutlawArea temp = new EggOutlawArea(xCorner, zCorner, nameArea, world);
+        jail.add(temp);
+        return true;
+	}*/
+
+	public boolean removeBanArea(EggOutlawArea removeArea) {
+        for(EggOutlawArea temp : jail) {
+                if (temp.equals(removeArea)) {
+                        jail.remove(temp);
+                        return true;
+                }
+        }
+        return false;
+	}
+	public void initializeSerFile() {
+		File file = new File("eggbanareas.ser");
+		if(file.exists()) {
+			try{
+				FileInputStream fis = new FileInputStream(file);
+				ObjectInputStream ois = new ObjectInputStream(fis);
+				jail = (ArrayList<EggOutlawArea>)ois.readObject();
+				ois.close();
+			}catch(IOException e) { e.printStackTrace(); 
+			}catch(ClassNotFoundException e) { e.printStackTrace(); }
+		}
+	}
+	public void updateSerFile() {
+		File file = new File("eggbanareas.ser");
+		if(!file.exists() && jail.size() > 0) {
+			try{
+				FileOutputStream fos = new FileOutputStream(file);
+				ObjectOutputStream oos = new ObjectOutputStream(fos);
+				oos.writeObject(jail);
+				oos.close();
+			}catch(IOException e) { e.printStackTrace(); }
+		}
+		else if(jail.size() > 0 && file.exists()){
+			file.delete();
+			try{
+				FileOutputStream fos = new FileOutputStream(file);
+				ObjectOutputStream oos = new ObjectOutputStream(fos);
+				oos.writeObject(jail);
+				oos.close();
+			}catch(IOException e) { e.printStackTrace(); }
+		}
+	}
+	public ChatColor getColor(int index) {
+		index %= 4;
+		switch(index) {
+		case 0:
+			return ChatColor.LIGHT_PURPLE;
+		case 1:
+			return ChatColor.BLUE;
+		case 2:
+			return ChatColor.GOLD;
+		default:
+			return ChatColor.AQUA;
+		}
 	}
 }
