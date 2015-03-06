@@ -1,6 +1,8 @@
 package com.crystalcraftmc.crystaleggfactory;
 
-public class EggOutlawArea {
+import java.io.Serializable;
+
+public class EggOutlawArea implements Serializable {
 	private double x1;
 	private double z1;
 	private double x2;
