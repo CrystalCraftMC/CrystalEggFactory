@@ -382,18 +382,32 @@ public class CrystalEggFactory extends JavaPlugin {
 								contents.add(in.nextLine());
 							}
 							in.close();
+							boolean goingOn = args[1].equalsIgnoreCase("true") ? true : false;
 							switch(args[0].charAt(0)) {
 							case 'o':
 								contents.set(0, "overworld=".concat(args[1].toLowerCase()));
 								overworldBan = args[1].charAt(0) == 'f' ? false : true;
+								if(goingOn)
+									p.sendMessage(ChatColor.GREEN + "Eggs in overworld are now dis-allowed");
+								else
+									p.sendMessage(ChatColor.GREEN + "Eggs in overworld are now allowed");
 								break;
 							case 'n':
-								contents.set(0, "nether=".concat(args[1].toLowerCase()));
+								contents.set(1, "nether=".concat(args[1].toLowerCase()));
 								netherBan = args[1].charAt(0) == 'f' ? false : true;
+								if(goingOn)
+									p.sendMessage(ChatColor.RED + "Eggs in nether are now dis-allowed");
+								else
+									p.sendMessage(ChatColor.RED + "Eggs in nether are now allowed");
 								break;
 							case 'e':
-								contents.set(0, "end=".concat(args[1].toLowerCase()));
+								contents.set(2, "end=".concat(args[1].toLowerCase()));
 								endBan = args[1].charAt(0) == 'f' ? false : true;
+								p.sendMessage(ChatColor.BLUE + "Eggs in end set to "+args[1]);
+								if(goingOn)
+									p.sendMessage(ChatColor.BLUE + "Eggs in end are now dis-allowed");
+								else
+									p.sendMessage(ChatColor.BLUE + "Eggs in end are now allowed");
 								break;
 							}
 							PrintWriter pw = new PrintWriter("eggbanworld.txt");
@@ -405,6 +419,7 @@ public class CrystalEggFactory extends JavaPlugin {
 							pw.flush();
 							pw.close();
 						}catch(IOException e) { e.printStackTrace(); }
+						return true;
 					}
 					else
 						return false;
@@ -413,6 +428,8 @@ public class CrystalEggFactory extends JavaPlugin {
 					p.sendMessage(ChatColor.GREEN + "Overworld Egg Ban=" + String.valueOf(overworldBan));
 					p.sendMessage(ChatColor.RED + "Nether Egg Ban=" + String.valueOf(netherBan));
 					p.sendMessage(ChatColor.BLUE + "End Egg Ban=" + String.valueOf(endBan));
+					
+					return true;
 				}
 				return false;
 			
