@@ -87,6 +87,8 @@ public class EggThrowListener implements Listener {
 			//getClickedBlock() type="MOB_SPAWNER"
 			if(e.getAction().toString().equals("RIGHT_CLICK_BLOCK") &&
 						e.getPlayer().getItemInHand().isSimilar(fire)) {
+				if(checkOutlawAreas(e)) return;
+
 				if(e.getPlayer().getItemInHand().getEnchantmentLevel(Enchantment.ARROW_FIRE) == 1) {
 					String restrictedRegion = this.restrictedRegion(e.getPlayer());
 					if(restrictedRegion.equalsIgnoreCase("fine place")) {
@@ -118,6 +120,8 @@ public class EggThrowListener implements Listener {
 				}
 				else if(e.getAction().toString().equals("RIGHT_CLICK_BLOCK") &&
 						this.isAnyKindOfEgg(e.getPlayer().getItemInHand())) {
+					if(checkOutlawAreas(e)) return;
+
 					String restrictedArea = this.restrictedRegion(e.getPlayer());
 					boolean isRestricted = false;
 					if(restrictedArea.equalsIgnoreCase("spawn")) {
@@ -141,6 +145,7 @@ public class EggThrowListener implements Listener {
 			}
 			else if(e.getAction().toString().equals("RIGHT_CLICK_BLOCK")) {
 				if(e.getClickedBlock().getType().toString().equals("MOB_SPAWNER")) {
+					if(checkOutlawAreas(e)) return;
 					Player p = e.getPlayer();
 					ItemStack is = p.getItemInHand();
 					boolean matchesNerfedEgg = false;
@@ -199,4 +204,87 @@ public class EggThrowListener implements Listener {
 		return isSpawnEgg;
 	}
 	
+	public boolean findDomain(double x1, double x2, double blckx) {
+		//if both x coords are (-)
+		if(x1 < 0 && x2 < 0) {
+			if (Math.abs(x1) > Math.abs(x2)) {
+				if (x2 > blckx && blckx > x1)
+					return true;
+			}
+			else if (Math.abs(x1) < Math.abs(x2)) {
+				if (x2 < blckx && blckx < x1)
+					return true;
+			}
+		}
+		//if both x coords are (+)
+		if (x1 >= 0 && x2 >= 0) {
+			if (x1 < x2) {
+				if (x1 < blckx && blckx < x2)
+					return true;
+			}
+			else if (x2 < x1) {
+				if (x2 < blckx && blckx < x1)
+					return true;
+			}
+		}
+		//if x1 is (-), and x2 is (+)
+		else if (x1 < 0 && x2 >= 0) {
+			if (x1 < blckx && blckx < x2)
+				return true;
+		}
+		//if x1 is (+) and x2 is (-)
+		else if (x1 >= 0 && x2 < 0) {
+			if (x2 < blckx && blckx < x1)
+				return true;
+		}
+		return false;
+	}
+	public boolean findRange(double z1, double z2, double blckz) {
+		//if both x coords are (-)
+		if(z1 < 0 && z2 < 0) {
+			if (Math.abs(z1) > Math.abs(z2)) {
+				if (z2 > blckz && blckz > z1)
+					return true;
+			}
+			else if (Math.abs(z1) < Math.abs(z2)) {
+				if (z2 < blckz && blckz < z1)
+					return true;
+			}
+		}
+		//if both x coords are (+)
+		if (z1 >= 0 && z2 >= 0) {
+			if (z1 < z2) {
+				if (z1 < blckz && blckz < z2)
+					return true;
+			}
+			else if (z2 < z1) {
+				if (z2 < blckz && blckz < z1)
+					return true;
+			}
+		}
+		//if x1 is (-), and x2 is (+)
+		else if (z1 < 0 && z2 >= 0) {
+			if (z1 < blckz && blckz < z2)
+				return true;
+		}
+		//if x1 is (+) and x2 is (-)
+		else if (z1 >= 0 && z2 < 0) {
+			if (z2 < blckz && blckz < z1)
+				return true;
+		}
+		return false;
+	}
+	public boolean checkOutlawAreas (PlayerInteractEvent e) {
+		int x = e.getClickedBlock().getLocation().getBlockX();
+		int z = e.getClickedBlock().getLocation().getBlockZ();
+		for(EggOutlawArea k : globalEgg.jail) {
+				boolean domain = findDomain(k.getX1(), k.getX2(), x);
+				boolean range = findRange(k.getZ1(), k.getZ2(), z);
+			if (domain && range) {
+				e.setCancelled(true);
+				return true;
+			}
+		}
+		return false;
+	}
 }
