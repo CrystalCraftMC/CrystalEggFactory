@@ -25,11 +25,9 @@ import org.bukkit.FireworkEffect;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.FireworkEffect.Type;
-import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -90,71 +88,24 @@ public class EggThrowListener implements Listener {
 				if(checkOutlawAreas(e)) return;
 
 				if(e.getPlayer().getItemInHand().getEnchantmentLevel(Enchantment.ARROW_FIRE) == 1) {
-					String restrictedRegion = this.restrictedRegion(e.getPlayer());
-					if(restrictedRegion.equalsIgnoreCase("fine place")) {
-						if(this.theBlocksAboveClear(e.getClickedBlock())) {
-							new CakeAnimation(e.getClickedBlock(), globalEgg);
-						}
-						else {
-							e.getPlayer().sendMessage(ChatColor.RED + "Error; " + ChatColor.GOLD +
-									"the " + String.valueOf(accessFields.NUMCAKES) +
-									" blocks above the WildRaeganrr rocket must be clear.");
-							e.setCancelled(true);
-						}
+					if(this.theBlocksAboveClear(e.getClickedBlock())) {
+						new CakeAnimation(e.getClickedBlock(), globalEgg);
 					}
 					else {
-						if(restrictedRegion.equalsIgnoreCase("spawn")) {
-							e.getPlayer().sendMessage(ChatColor.RED + "Error; the Rae Egg " +
-									"cannot be used at spawn.");
-						}
-						if(restrictedRegion.equalsIgnoreCase("coo")) {
-							e.getPlayer().sendMessage(ChatColor.RED + "Error; the Rae Egg " +
-									"cannot be used in the City Of Occurrences.");
-						}
-						if(restrictedRegion.equalsIgnoreCase("bedrock vaults")) {
-							e.getPlayer().sendMessage(ChatColor.RED + "Error; the Rae Egg " +
-									"cannot be used at the bedrock vaults.");
-						}
+						e.getPlayer().sendMessage(ChatColor.RED + "Error; " + ChatColor.GOLD +
+									"the " + String.valueOf(accessFields.NUMCAKES) +
+									" blocks above the WildRaeganrr rocket must be clear.");
 						e.setCancelled(true);
 					}
-				}
-				else if(e.getAction().toString().equals("RIGHT_CLICK_BLOCK") &&
-						this.isAnyKindOfEgg(e.getPlayer().getItemInHand())) {
-					if(checkOutlawAreas(e)) return;
-
-					String restrictedArea = this.restrictedRegion(e.getPlayer());
-					boolean isRestricted = false;
-					if(restrictedArea.equalsIgnoreCase("spawn")) {
-						e.getPlayer().sendMessage(ChatColor.RED + "Error; spawn eggs " +
-								"cannot be used at spawn.");
-						isRestricted = true;
-					}
-					if(restrictedArea.equalsIgnoreCase("coo")) {
-						e.getPlayer().sendMessage(ChatColor.RED + "Error; spawn eggs " +
-								"cannot be used in the City Of Occurrences.");
-						isRestricted = true;
-					}
-					if(restrictedArea.equalsIgnoreCase("bedrock vaults")) {
-						e.getPlayer().sendMessage(ChatColor.RED + "Error; spawn eggs " +
-								"cannot be used at the bedrock vaults.");
-						isRestricted = true;
-					}
-					if(isRestricted)
-						e.setCancelled(true);
 				}
 			}
-			else if(e.getAction().toString().equals("RIGHT_CLICK_BLOCK")) {
+			else if(e.getAction().toString().equals("RIGHT_CLICK_BLOCK") &&
+					this.isAnyKindOfEgg(e.getPlayer().getItemInHand())) {
+				
+				if(checkOutlawAreas(e)) return;
+				ItemStack is = e.getPlayer().getItemInHand();
 				if(e.getClickedBlock().getType().toString().equals("MOB_SPAWNER")) {
-					if(checkOutlawAreas(e)) return;
-					Player p = e.getPlayer();
-					ItemStack is = p.getItemInHand();
-					boolean matchesNerfedEgg = false;
-					for(int i = 0; i < 27; i++) {
-						if(is.getData().getData() == icon[i].getData().getData())
-							matchesNerfedEgg = true;
-					}
-					
-					if(matchesNerfedEgg && is.containsEnchantment(Enchantment.ARROW_INFINITE)) {
+					if(is.containsEnchantment(Enchantment.ARROW_INFINITE)) {
 						e.getPlayer().sendMessage("Cancelled event");
 						e.setCancelled(true);
 					}
@@ -171,29 +122,6 @@ public class EggThrowListener implements Listener {
 				return false;
 		}
 		return true;
-	}
-	public String restrictedRegion(Player p) {
-		Location loc = p.getLocation();
-		World w = p.getWorld();
-		//x:-9864 z:-9927 ~ x:-9990 z:-10000  (bedrock vaults) (the_end)
-		//x:693 z:687 ~ x:1434 z:-21  (coo)
-		//x:285 z:-266 ~ x:-153 z:241 (spawn)
-		int x = (int)loc.getX();
-		int z = (int)loc.getZ();
-		if(w.getEnvironment() == Environment.THE_END) {
-			if(x < -9850 && x > -10010 && z < 9910 && z > 10020) {
-				return "bedrock vaults";
-			}
-		}
-		else if(w.getEnvironment() == Environment.NORMAL) {
-			if(x < 1450 && x > 675 && z < 700 && z > -35) {
-				return "coo";
-			}
-			if(x > -160 && x < 300 && z > -275 && z < 250) {
-				return "spawn";
-			}
-		}
-		return "fine place";
 	}
 	public boolean isAnyKindOfEgg(ItemStack isE) {
 		boolean isSpawnEgg = false;
@@ -275,6 +203,32 @@ public class EggThrowListener implements Listener {
 		return false;
 	}
 	public boolean checkOutlawAreas (PlayerInteractEvent e) {
+		if(e.getPlayer().isOp()) {
+			e.getPlayer().sendMessage(ChatColor.GOLD + "op allowed egg use in this area");
+			if(e.getPlayer().getItemInHand().isSimilar(fire) &&
+					e.getPlayer().getItemInHand().getEnchantmentLevel(Enchantment.ARROW_FIRE) == 1) {
+				new CakeAnimation(e.getClickedBlock(), globalEgg);
+			}
+			return true;
+		}
+		if(e.getPlayer().getWorld().getEnvironment() == Environment.NORMAL) {
+			if(globalEgg.overworldBan) {
+				e.setCancelled(true);
+				return true;
+			}
+		}
+		else if(e.getPlayer().getWorld().getEnvironment() == Environment.NETHER) {
+			if(globalEgg.netherBan) {
+				e.setCancelled(true);
+				return true;
+			}
+		}
+		else if(e.getPlayer().getWorld().getEnvironment() == Environment.THE_END) {
+			if(globalEgg.endBan) {
+				e.setCancelled(true);
+				return true;
+			}
+		}
 		int x = e.getClickedBlock().getLocation().getBlockX();
 		int z = e.getClickedBlock().getLocation().getBlockZ();
 		for(EggOutlawArea k : globalEgg.jail) {
