@@ -204,7 +204,6 @@ public class EggThrowListener implements Listener {
 	}
 	public boolean checkOutlawAreas (PlayerInteractEvent e) {
 		if(e.getPlayer().isOp()) {
-			e.getPlayer().sendMessage(ChatColor.GOLD + "op allowed egg use in this area");
 			if(e.getPlayer().getItemInHand().isSimilar(fire) &&
 					e.getPlayer().getItemInHand().getEnchantmentLevel(Enchantment.ARROW_FIRE) == 1) {
 				new CakeAnimation(e.getClickedBlock(), globalEgg);
