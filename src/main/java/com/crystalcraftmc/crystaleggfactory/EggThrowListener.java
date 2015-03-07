@@ -30,6 +30,7 @@ import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockDispenseEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.FireworkMeta;
@@ -76,6 +77,12 @@ public class EggThrowListener implements Listener {
 			ItemMeta im2 = icon[i].getItemMeta();
 			im2.addEnchant(Enchantment.ARROW_INFINITE, 1, false);
 			icon[i].setItemMeta(im2);
+		}
+	}
+	@EventHandler
+	public void stopDispenserEggs(BlockDispenseEvent e) {
+		if(e.getItem().getType() == Material.MONSTER_EGG) {
+			if(this.checkOutlawAreas(e)) return;
 		}
 	}
 	@EventHandler
@@ -230,6 +237,37 @@ public class EggThrowListener implements Listener {
 		}
 		int x = e.getClickedBlock().getLocation().getBlockX();
 		int z = e.getClickedBlock().getLocation().getBlockZ();
+		for(EggOutlawArea k : globalEgg.jail) {
+				boolean domain = findDomain(k.getX1(), k.getX2(), x);
+				boolean range = findRange(k.getZ1(), k.getZ2(), z);
+			if (domain && range) {
+				e.setCancelled(true);
+				return true;
+			}
+		}
+		return false;
+	}
+	public boolean checkOutlawAreas (BlockDispenseEvent e) {
+		if(e.getBlock().getWorld().getEnvironment() == Environment.NORMAL) {
+			if(globalEgg.overworldBan) {
+				e.setCancelled(true);
+				return true;
+			}
+		}
+		else if(e.getBlock().getWorld().getEnvironment() == Environment.NETHER) {
+			if(globalEgg.netherBan) {
+				e.setCancelled(true);
+				return true;
+			}
+		}
+		else if(e.getBlock().getWorld().getEnvironment() == Environment.THE_END) {
+			if(globalEgg.endBan) {
+				e.setCancelled(true);
+				return true;
+			}
+		}
+		int x = e.getBlock().getLocation().getBlockX();
+		int z = e.getBlock().getLocation().getBlockZ();
 		for(EggOutlawArea k : globalEgg.jail) {
 				boolean domain = findDomain(k.getX1(), k.getX2(), x);
 				boolean range = findRange(k.getZ1(), k.getZ2(), z);
