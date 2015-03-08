@@ -240,7 +240,16 @@ public class EggThrowListener implements Listener {
 		for(EggOutlawArea k : globalEgg.jail) {
 				boolean domain = findDomain(k.getX1(), k.getX2(), x);
 				boolean range = findRange(k.getZ1(), k.getZ2(), z);
-			if (domain && range) {
+				Environment spawnWorld = e.getPlayer().getWorld().getEnvironment();
+				Environment archiveWorld;
+				String banworld = k.getWorld();
+				if(banworld.equalsIgnoreCase("overworld"))
+					archiveWorld = Environment.NORMAL;
+				else if(banworld.equalsIgnoreCase("nether"))
+					archiveWorld = Environment.NETHER;
+				else
+					archiveWorld = Environment.THE_END;
+			if (domain && range && (archiveWorld == spawnWorld)) {
 				e.setCancelled(true);
 				return true;
 			}
@@ -271,7 +280,16 @@ public class EggThrowListener implements Listener {
 		for(EggOutlawArea k : globalEgg.jail) {
 				boolean domain = findDomain(k.getX1(), k.getX2(), x);
 				boolean range = findRange(k.getZ1(), k.getZ2(), z);
-			if (domain && range) {
+				Environment spawnWorld = e.getBlock().getWorld().getEnvironment();
+				Environment archiveWorld;
+				String banworld = k.getWorld();
+				if(banworld.equalsIgnoreCase("overworld"))
+					archiveWorld = Environment.NORMAL;
+				else if(banworld.equalsIgnoreCase("nether"))
+					archiveWorld = Environment.NETHER;
+				else
+					archiveWorld = Environment.THE_END;
+			if (domain && range && (archiveWorld == spawnWorld)) {
 				e.setCancelled(true);
 				return true;
 			}
