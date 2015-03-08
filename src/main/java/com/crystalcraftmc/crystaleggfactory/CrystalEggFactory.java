@@ -467,13 +467,20 @@ public class CrystalEggFactory extends JavaPlugin {
 						jail.add(new EggOutlawArea(Double.parseDouble(args[0]), Double.parseDouble(args[1]),
 								Double.parseDouble(args[2]), Double.parseDouble(args[3]), args[4], worldName));
 						updateSerFile();
+						String worldS;
+						if(p.getWorld().getEnvironment() == Environment.NORMAL)
+							worldS = "overworld";
+						else if(p.getWorld().getEnvironment() == Environment.THE_END)
+							worldS = "end";
+						else
+							worldS = "nether";
 						p.sendMessage(ChatColor.GOLD + "Area " + ChatColor.AQUA + args[4] + ChatColor.GOLD +
 								" Between " + ChatColor.BLUE + "(x, z) " + ChatColor.RED + "(" + ChatColor.LIGHT_PURPLE + 
 								args[0] + ChatColor.RED +
 								", " + ChatColor.LIGHT_PURPLE + args[1] + ChatColor.RED + ")" + ChatColor.GOLD + " to " +
 								ChatColor.RED + "(" + ChatColor.LIGHT_PURPLE + args[2] + ChatColor.RED +
 								", " + ChatColor.LIGHT_PURPLE + args[3] + ChatColor.RED + ")" + ChatColor.GOLD + " is now" +
-								" off limits for the use of spawn eggs.");
+								" off limits for the use of spawn eggs in the " + ChatColor.RED + worldS + ChatColor.GOLD + ".");
 						return true;
 					}
 				}
