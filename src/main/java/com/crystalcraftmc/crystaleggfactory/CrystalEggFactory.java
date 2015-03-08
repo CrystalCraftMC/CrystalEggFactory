@@ -53,7 +53,7 @@ public class CrystalEggFactory extends JavaPlugin {
 						"RaeCaker", "R", "W", "wr"};
 	private ItemStack raeFire;
 	
-	private String[][] mobTypeList = { {"creeper", "creepers",
+	private String[][] mobTypeList = { {"creeper", "creepers", "creep",
 				"stalker", "stalkers", "walking-tnt", "               cr"},
 				{"skeleton", "skeletons", "skelly",
 					"skely", "sk"}, {"spider", "spiders", "spiderman",
