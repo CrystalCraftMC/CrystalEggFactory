@@ -118,6 +118,7 @@ public class CrystalEggFactory extends JavaPlugin {
 		
 //####################################################################
 		fm.addEnchant(Enchantment.ARROW_FIRE, 1, false);
+		fm.setDisplayName(ChatColor.RED + "Wild Raeganrr Spawn Egg");
 		raeFire.setItemMeta(fm);
 		ItemStack god;
 		god = new ItemStack(Material.MONSTER_EGG, 1, (short)50);
