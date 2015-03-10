@@ -69,6 +69,7 @@ public class EggThrowListener implements Listener {
 		fm.setLore(lore);
 //####################################################################
 		fm.addEnchant(Enchantment.ARROW_FIRE, 1, false);
+		fm.setDisplayName(ChatColor.RED + "Wild Raeganrr Spawn Egg");
 		fire.setItemMeta(fm);
 		
 		icon = new ItemStack[27];
@@ -213,7 +214,14 @@ public class EggThrowListener implements Listener {
 		if(e.getPlayer().isOp()) {
 			if(e.getPlayer().getItemInHand().isSimilar(fire) &&
 					e.getPlayer().getItemInHand().getEnchantmentLevel(Enchantment.ARROW_FIRE) == 1) {
-				new CakeAnimation(e.getClickedBlock(), globalEgg);
+				if(this.theBlocksAboveClear(e.getClickedBlock()))
+					new CakeAnimation(e.getClickedBlock(), globalEgg);
+				else {
+					e.getPlayer().sendMessage(ChatColor.RED + "Error; " + ChatColor.GOLD +
+							"the " + String.valueOf(accessFields.NUMCAKES) +
+							" blocks above the WildRaeganrr rocket must be clear.");
+					e.setCancelled(true);
+				}
 			}
 			return true;
 		}
