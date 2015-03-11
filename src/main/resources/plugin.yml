@@ -1,6 +1,7 @@
 name: CrystalEggFactory
 main: com.crystalcraftmc.crystaleggfactory.CrystalEggFactory
-version: 1.0
+version: 0.2
+authors: [Jwood9198, Jacc734, jflory7]
 commands:
    egg:
       description:
@@ -32,3 +33,11 @@ commands:
          Allow/disallow eggs in a certain world (banned areas still apply)
       usage:
          /<command><end/overworld/nether><true/false>
+         
+permissions:
+   CrystalEggFactory.use:
+      description:
+         Allows use of all CrystalEggFactory commands, as well as the ability to bypass
+         banned egg areas
+      default: op
+         
