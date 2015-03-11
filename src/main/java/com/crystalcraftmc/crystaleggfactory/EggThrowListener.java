@@ -17,14 +17,10 @@
 
 package com.crystalcraftmc.crystaleggfactory;
 
-import java.util.ArrayList;
 
 import org.bukkit.ChatColor;
-import org.bukkit.Color;
-import org.bukkit.FireworkEffect;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.FireworkEffect.Type;
 import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
@@ -33,13 +29,17 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockDispenseEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 
 public class EggThrowListener implements Listener {
-	private CakeAnimation accessFields;
+	
+	/**Holds the data of all the nerfed spawn eggs*/
 	private ItemStack[] icon;
+	
+	/**Holds the data of the rae spawn egg firework*/
 	private ItemStack fire;
+	
+	/**The byte data of all the spawn eggs*/
 	private byte[] data = {(byte)50, (byte)51, (byte)52, (byte)54,
 						(byte)55, (byte)56, (byte)57, (byte)58,
 						(byte)59, (byte)60, (byte)61, (byte)62,
@@ -47,30 +47,17 @@ public class EggThrowListener implements Listener {
 						(byte)90, (byte)91, (byte)92, (byte)93,
 						(byte)94, (byte)95, (byte)96, (byte)98,
 						(byte)100, (byte)101, (byte)120 };
+	/**The plugin object*/
 	private CrystalEggFactory globalEgg;
-	public EggThrowListener(CrystalEggFactory egg) {
+	
+	/**Initializes the Listener class to prevent egg use
+	 * @param egg the plugin we're listening in on
+	 * @param fire the data of the rae firework
+	 */
+	public EggThrowListener(CrystalEggFactory egg, ItemStack fire) {
 		egg.getServer().getPluginManager().registerEvents(this, egg);
 		globalEgg = egg;
-		accessFields = new CakeAnimation();
-		fire = new ItemStack(Material.FIREWORK, 1);
-		FireworkMeta fm = (FireworkMeta) fire.getItemMeta();
-		ArrayList<Color> alColor = new ArrayList<Color>();
-		alColor.add(Color.PURPLE);
-		alColor.add(Color.FUCHSIA);
-		ArrayList<Color> alFade = new ArrayList<Color>();
-		alFade.add(Color.BLUE);
-		alFade.add(Color.AQUA);
-		fm.addEffects(FireworkEffect.builder().trail(true).withColor(alColor).withFade(alFade).with(Type.BALL_LARGE).build());
-		fm.setPower(2);
-//####################################################################
-		ArrayList<String> lore = new ArrayList<String>();
-		lore.add(ChatColor.LIGHT_PURPLE + "jflory7 isn't here to save you now");
-		lore.add(ChatColor.RED + "unleash at your own peril");
-		fm.setLore(lore);
-//####################################################################
-		fm.addEnchant(Enchantment.ARROW_FIRE, 1, false);
-		fm.setDisplayName(ChatColor.RED + "Wild Raeganrr Spawn Egg");
-		fire.setItemMeta(fm);
+		this.fire = fire;
 		
 		icon = new ItemStack[27];
 		for(int i = 0; i < 27; i++) {
@@ -80,12 +67,22 @@ public class EggThrowListener implements Listener {
 			icon[i].setItemMeta(im2);
 		}
 	}
+	
+	/**Prevents the deployment of spawn eggs by dispensers in
+	 * banned areas
+	 * @param BlockDispenseEvent e the event we're testing
+	 */
 	@EventHandler
 	public void stopDispenserEggs(BlockDispenseEvent e) {
 		if(e.getItem().getType() == Material.MONSTER_EGG) {
 			if(this.checkOutlawAreas(e)) return;
 		}
 	}
+	
+	/**Prevents gen2 eggs from changing spawners, and prevents any eggs from
+	 * being used in banned areas (except ops (by default) )
+	 * @param e the PlayerInteractEvent we're testing
+	 */
 	@EventHandler
 	public void stopSpawnerChanging(PlayerInteractEvent e) {
 		if(e.getPlayer() != null) {
@@ -101,7 +98,7 @@ public class EggThrowListener implements Listener {
 					}
 					else {
 						e.getPlayer().sendMessage(ChatColor.RED + "Error; " + ChatColor.GOLD +
-									"the " + String.valueOf(accessFields.NUMCAKES) +
+									"the " + String.valueOf(CrystalEggFactory.NUMCAKES) +
 									" blocks above the WildRaeganrr rocket must be clear.");
 						e.setCancelled(true);
 					}
@@ -122,15 +119,26 @@ public class EggThrowListener implements Listener {
 			}
 		}
 	}
+	
+	/**Tests whether spawning a Raeganrr at a certain block would have enough
+	 * verticle free space or not.
+	 * @param b the Block we're starting from
+	 * @return boolean true if there is enough free area to spawn rae
+	 */
 	public boolean theBlocksAboveClear(Block b) {
 		Location loc = b.getLocation();
-		for(int i = 0; i < accessFields.NUMCAKES; i++) {
+		for(int i = 0; i < CrystalEggFactory.NUMCAKES; i++) {
 			loc.setY(loc.getY()+1);
 			if(!loc.getBlock().isEmpty())
 				return false;
 		}
 		return true;
 	}
+	
+	/**Tests whether an itemstack is any kind of monster spawn egg
+	 * @param isE the itemstack we're testing
+	 * @return boolean true if it is any kind of spawn egg
+	 */
 	public boolean isAnyKindOfEgg(ItemStack isE) {
 		boolean isSpawnEgg = false;
 		for(int i = 0; i < 27; i++) {
@@ -140,6 +148,12 @@ public class EggThrowListener implements Listener {
 		return isSpawnEgg;
 	}
 	
+	/**Tests whether a specified block is contained within certain x coordinates
+	 * @param x1 the first x coordinate
+	 * @param x2 the second x coordinate
+	 * @param blckx the block we're testing
+	 * @return true if the block is inside the specified coordinates
+	 */
 	public boolean findDomain(double x1, double x2, double blckx) {
 		//if both x coords are (-)
 		if(x1 < 0 && x2 < 0) {
@@ -175,6 +189,13 @@ public class EggThrowListener implements Listener {
 		}
 		return false;
 	}
+	
+	/**Tests whether a specified block is contained within certain z coordinates
+	 * @param z1 the first x coordinate
+	 * @param z2 the second x coordinate
+	 * @param blckx the block we're testing
+	 * @return true if the block is inside the specified coordinates
+	 */
 	public boolean findRange(double z1, double z2, double blckz) {
 		//if both x coords are (-)
 		if(z1 < 0 && z2 < 0) {
@@ -210,15 +231,21 @@ public class EggThrowListener implements Listener {
 		}
 		return false;
 	}
+	
+	/**tests whether the event should be cancelled or not, taking
+	 * permissions, banned areas, and banned worlds into account
+	 * @param e the PlayerInteractEvent we're testing
+	 * @return true if the event should be cancelled
+	 */
 	public boolean checkOutlawAreas (PlayerInteractEvent e) {
-		if(e.getPlayer().isOp()) {
+		if(e.getPlayer().hasPermission("CrystalEggFactory.use")) {
 			if(e.getPlayer().getItemInHand().isSimilar(fire) &&
 					e.getPlayer().getItemInHand().getEnchantmentLevel(Enchantment.ARROW_FIRE) == 1) {
 				if(this.theBlocksAboveClear(e.getClickedBlock()))
 					new CakeAnimation(e.getClickedBlock(), globalEgg);
 				else {
 					e.getPlayer().sendMessage(ChatColor.RED + "Error; " + ChatColor.GOLD +
-							"the " + String.valueOf(accessFields.NUMCAKES) +
+							"the " + String.valueOf(CrystalEggFactory.NUMCAKES) +
 							" blocks above the WildRaeganrr rocket must be clear.");
 					e.setCancelled(true);
 				}
@@ -264,6 +291,12 @@ public class EggThrowListener implements Listener {
 		}
 		return false;
 	}
+	
+	/**Tests whether a blockdispenseevent is in a banned area,
+	 * and if it is, cancells the event.
+	 * @param e the BlockDispenseEvent we're testing
+	 * @return true if it is in a banned area
+	 */
 	public boolean checkOutlawAreas (BlockDispenseEvent e) {
 		if(e.getBlock().getWorld().getEnvironment() == Environment.NORMAL) {
 			if(globalEgg.overworldBan) {
@@ -304,4 +337,5 @@ public class EggThrowListener implements Listener {
 		}
 		return false;
 	}
+	
 }
