@@ -21,13 +21,17 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 
+/**The cake animation that is shown upon using a Raeganrr spawnegg*/
 public class CakeAnimation {
 	private CrystalEggFactory plugin;
-	public final int NUMCAKES = 5; //MAY CHANGE NUMBER - will also automatically check NUMCAKES blocks
-									//above the PlayerInteractEvent to make sure clear before proceeding
 	
-	private final int CAKEFRAMERATE = 5; //cakes show up CAKEFRAMERATE ticks inbetween eachother
+	
 //####################################################################
+	
+	/**Initializes a cake animation object
+	 * @param b the block we're starting from
+	 * @param plugin the main plugin class
+	 */
 	public CakeAnimation(Block b, CrystalEggFactory plugin) {
 		this.plugin = plugin;
 		Location loc = b.getLocation();
@@ -36,16 +40,18 @@ public class CakeAnimation {
 			this.hailMary(loc.getBlock(), i);
 		}
 	}
-	public CakeAnimation() {
-		//to create a low-resource accessFields object in EggThrowListener class
-	}
+	
+	/**Where the actual spawning of the eggs takes place
+	 * @param b the block to change to cake
+	 * @param z the nth cake we're spawning in (to determine the delay)
+	 */
 	public void hailMary(Block b, int z) {
 		final Block bw = b; //has to be Final for runnable code to work
 		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
             public void run() {
                 bw.setType(Material.CAKE_BLOCK);
             }
-        }, (long)((CAKEFRAMERATE*z)+1));
+        }, (long)((CrystalEggFactory.CAKEFRAMERATE*z)+1));
 	}
 	
 }
