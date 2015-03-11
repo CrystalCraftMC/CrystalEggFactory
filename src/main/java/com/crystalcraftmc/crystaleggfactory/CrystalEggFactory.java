@@ -43,17 +43,28 @@ import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
+/**CrystalEggFactory is an open source plugin designed to grant ops(by default)
+ *  the ability to create spawn eggs that do not have the ability to change spawners. 
+ *  (A Minecraft 1.8 Feature)
+ * 
+ */
 public class CrystalEggFactory extends JavaPlugin {
 	
+	/**Holds whether all eggs are currently banned in said worlds*/
 	public boolean overworldBan, netherBan, endBan;
 	
+	/**A list of banned areas (pairs of x/z coords, world, and ID_Name*/
 	public ArrayList<EggOutlawArea> jail = new ArrayList<EggOutlawArea>();
 	
+	/**Different ways a rae egg can be called in the /egg command*/
 	private String[] raeAlias = {"WildRaeganrr", "wildRae", "Rae", "CakeQueen", "RaeCaker123", 
 						"RaeCaker", "R", "W", "wr"};
-	private ItemStack raeFire;
 	
-	private String[][] mobTypeList = { {"creeper", "creepers", "creep",
+	/**Holds the data of the rae egg firework*/
+	private ItemStack fire;
+	
+	/**Lists all the aliases one can use when specifying the mobtype attribute in /egg*/
+	private String[][] mobTypeList = { {"creeper", "creepers",
 				"stalker", "stalkers", "walking-tnt", "               cr"},
 				{"skeleton", "skeletons", "skelly",
 					"skely", "sk"}, {"spider", "spiders", "spiderman",
@@ -78,6 +89,7 @@ public class CrystalEggFactory extends JavaPlugin {
 					{"villager", "villagers", "person", "people", "maori", "ppl", "vi"}};
 	//###########################################################################################
 	//###########################################################################################
+	/**A clean way of displaying each mob name*/
 	private String[] mobTypeTitles = {"Creeper", "Skeleton", "Spider", "Zombie", "Slime",
 									"Ghast", "Zombie Pigman", "Enderman", "Cave Spider",
 									"Silverfish", "Blaze", "Magma Cube", "Bat", "Witch",
@@ -85,177 +97,36 @@ public class CrystalEggFactory extends JavaPlugin {
 									"Squid", "Wolf", "Mooshroom", "Ocelot", "Horse", "Rabbit",
 									"Villager"};
 	//###########################################################################################
+	/**Different MobTypes that the spawn eggs can be*/
 	private enum MobType { NoMob, Creeper, Skeleton, Spider, Zombie, Slime, Ghast,
 						Zombie_Pigman, Enderman, Cave_Spider, Silverfish, Blaze,
 						Magma_Cube, Bat, Witch, Endermite, Guardian, Pig, Sheep, Cow,
 						Chicken, Squid, Wolf, Mooshroom, Ocelot, Horse, Rabbit, Villager};
 	//###########################################################################################
+						
+	/**A map that will be able to spit out a damage value when given a MobType value*/
 	Map<MobType, ItemStack> map = new HashMap<MobType, ItemStack>();
 	
+	
+	/**This final variable will determine how many cakes will spawn.
+	 * If any of the blocks that are going to be changed to cake aren't air
+	 * blocks, the event is cancelled*/
+	public static final int NUMCAKES = 5;
+	
+	/**cakes show up CAKEFRAMERATE ticks inbetween eachother*/
+	public static final int CAKEFRAMERATE = 5;
+	
+	/**Initialize a mobtype variable*/
 	private MobType mobType = MobType.NoMob;
-	//private EggThrowListener etl;
+	
 	public void onEnable() {
 		this.initializeWorldBan();
 		this.initializeSerFile();
+		this.createRaeFire();
 		getLogger().info("Egg plugin enabled.");
-		new EggThrowListener(this);
+		this.createMobTypeToDataMap();
+		new EggThrowListener(this, fire);
 		
-		raeFire = new ItemStack(Material.FIREWORK, 1);
-		FireworkMeta fm = (FireworkMeta) raeFire.getItemMeta();
-		ArrayList<Color> alColor = new ArrayList<Color>();
-		alColor.add(Color.PURPLE);
-		alColor.add(Color.FUCHSIA);
-		ArrayList<Color> alFade = new ArrayList<Color>();
-		alFade.add(Color.BLUE);
-		alFade.add(Color.AQUA);
-		fm.addEffects(FireworkEffect.builder().trail(true).withColor(alColor).withFade(alFade).with(Type.BALL_LARGE).build());
-		fm.setPower(2);
-//####################################################################
-		ArrayList<String> lore = new ArrayList<String>();
-		lore.add(ChatColor.LIGHT_PURPLE + "jflory7 isn't here to save you now");
-		lore.add(ChatColor.RED + "unleash at your own peril");
-		fm.setLore(lore);
-		
-//####################################################################
-		fm.addEnchant(Enchantment.ARROW_FIRE, 1, false);
-		fm.setDisplayName(ChatColor.RED + "Wild Raeganrr Spawn Egg");
-		raeFire.setItemMeta(fm);
-		ItemStack god;
-		god = new ItemStack(Material.MONSTER_EGG, 1, (short)50);
-		ItemMeta im = god.getItemMeta();
-		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
-		god.setItemMeta(im);
-		map.put(MobType.Creeper, god);
-		god = new ItemStack(Material.MONSTER_EGG, 1, (short)51);
-		im = god.getItemMeta();
-		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
-		god.setItemMeta(im);
-		map.put(MobType.Skeleton, god);
-		god = new ItemStack(Material.MONSTER_EGG, 1, (short)52);
-		im = god.getItemMeta();
-		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
-		god.setItemMeta(im);
-		map.put(MobType.Spider, god);
-		god = new ItemStack(Material.MONSTER_EGG, 1, (short)54);
-		im = god.getItemMeta();
-		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
-		god.setItemMeta(im);
-		map.put(MobType.Zombie, god);
-		god = new ItemStack(Material.MONSTER_EGG, 1, (short)55);
-		im = god.getItemMeta();
-		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
-		god.setItemMeta(im);
-		map.put(MobType.Slime, god);
-		god = new ItemStack(Material.MONSTER_EGG, 1, (short)56);
-		im = god.getItemMeta();
-		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
-		god.setItemMeta(im);
-		map.put(MobType.Ghast, god);
-		god = new ItemStack(Material.MONSTER_EGG, 1, (short)57);
-		im = god.getItemMeta();
-		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
-		god.setItemMeta(im);
-		map.put(MobType.Zombie_Pigman, god);
-		god = new ItemStack(Material.MONSTER_EGG, 1, (short)58);
-		im = god.getItemMeta();
-		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
-		god.setItemMeta(im);
-		map.put(MobType.Enderman, god);
-		god = new ItemStack(Material.MONSTER_EGG, 1, (short)59);
-		im = god.getItemMeta();
-		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
-		god.setItemMeta(im);
-		map.put(MobType.Cave_Spider, god);
-		god = new ItemStack(Material.MONSTER_EGG, 1, (short)60);
-		im = god.getItemMeta();
-		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
-		god.setItemMeta(im);
-		map.put(MobType.Silverfish, god);
-		god = new ItemStack(Material.MONSTER_EGG, 1, (short)61);
-		im = god.getItemMeta();
-		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
-		god.setItemMeta(im);
-		map.put(MobType.Blaze, god);
-		god = new ItemStack(Material.MONSTER_EGG, 1, (short)62);
-		im = god.getItemMeta();
-		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
-		god.setItemMeta(im);
-		map.put(MobType.Magma_Cube, god);
-		god = new ItemStack(Material.MONSTER_EGG, 1, (short)65);
-		im = god.getItemMeta();
-		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
-		god.setItemMeta(im);
-		map.put(MobType.Bat, god);
-		god = new ItemStack(Material.MONSTER_EGG, 1, (short)66);
-		im = god.getItemMeta();
-		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
-		god.setItemMeta(im);
-		map.put(MobType.Witch, god);
-		god = new ItemStack(Material.MONSTER_EGG, 1, (short)67);
-		im = god.getItemMeta();
-		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
-		god.setItemMeta(im);
-		map.put(MobType.Endermite, god);
-		god = new ItemStack(Material.MONSTER_EGG, 1, (short)68);
-		im = god.getItemMeta();
-		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
-		god.setItemMeta(im);
-		map.put(MobType.Guardian, god);
-		god = new ItemStack(Material.MONSTER_EGG, 1, (short)90);
-		im = god.getItemMeta();
-		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
-		god.setItemMeta(im);
-		map.put(MobType.Pig, god);
-		god = new ItemStack(Material.MONSTER_EGG, 1, (short)91);
-		im = god.getItemMeta();
-		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
-		god.setItemMeta(im);
-		map.put(MobType.Sheep, god);
-		god = new ItemStack(Material.MONSTER_EGG, 1, (short)92);
-		im = god.getItemMeta();
-		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
-		god.setItemMeta(im);
-		map.put(MobType.Cow, god);
-		god = new ItemStack(Material.MONSTER_EGG, 1, (short)93);
-		im = god.getItemMeta();
-		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
-		god.setItemMeta(im);
-		map.put(MobType.Chicken, god);
-		god = new ItemStack(Material.MONSTER_EGG, 1, (short)94);
-		im = god.getItemMeta();
-		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
-		god.setItemMeta(im);
-		map.put(MobType.Squid, god);
-		god = new ItemStack(Material.MONSTER_EGG, 1, (short)95);
-		im = god.getItemMeta();
-		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
-		god.setItemMeta(im);
-		map.put(MobType.Wolf, god);
-		god = new ItemStack(Material.MONSTER_EGG, 1, (short)96);
-		im = god.getItemMeta();
-		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
-		god.setItemMeta(im);
-		map.put(MobType.Mooshroom, god);
-		god = new ItemStack(Material.MONSTER_EGG, 1, (short)98);
-		im = god.getItemMeta();
-		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
-		god.setItemMeta(im);
-		map.put(MobType.Ocelot, god);
-		god = new ItemStack(Material.MONSTER_EGG, 1, (short)100);
-		im = god.getItemMeta();
-		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
-		god.setItemMeta(im);
-		map.put(MobType.Horse, god);
-		god = new ItemStack(Material.MONSTER_EGG, 1, (short)101);
-		im = god.getItemMeta();
-		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
-		god.setItemMeta(im);
-		map.put(MobType.Rabbit, god);
-		god = new ItemStack(Material.MONSTER_EGG, 1, (short)120);
-		im = god.getItemMeta();
-		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
-		god.setItemMeta(im);
-		map.put(MobType.Villager, god);
 	}
 	public void onDisable() {
 		getLogger().info("Egg plugin disabled.");
@@ -264,7 +135,7 @@ public class CrystalEggFactory extends JavaPlugin {
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 		if(sender instanceof Player) {
 			Player p = ((Player) sender);
-			if(p.isOp()) {
+			if(p.hasPermission("CrystalEggFactory.use")) {
 				if(args.length == 0 && label.equalsIgnoreCase("egglist")) {
 					this.displayMobTypes(p);
 					return true;
@@ -287,7 +158,7 @@ public class CrystalEggFactory extends JavaPlugin {
 									int invSpace = this.countFreeInventorySpace(p);
 									if(invSpace >= raeNum) {
 										for(int i = 0; i < raeNum; i++) {
-											p.getInventory().addItem(raeFire);
+											p.getInventory().addItem(fire);
 										}
 										return true;
 									}
@@ -314,7 +185,7 @@ public class CrystalEggFactory extends JavaPlugin {
 								return false;
 							}
 						}
-						else if(this.checkMobType(args[0], p)) {
+						else if(this.checkMobType(args[0], p) != MobType.NoMob) {
 							if(this.isInt(args[1])) {
 								int amount = Integer.parseInt(args[1]);
 								if(amount == 0)
@@ -516,106 +387,87 @@ public class CrystalEggFactory extends JavaPlugin {
 		}
 		return false;
 	}
-	public boolean checkMobType(String mob, Player p) {
+	
+	/**Tests whether a mobtype attribute has a valid value,
+	 * and if it is, returns the MobType of the specified mob
+	 * @param mob the argument we're testing
+	 * @param p the Player who sent the command
+	 * @return MobType the type of the mob (MobType.NoMob if invalid argument)
+	 */
+	public MobType checkMobType(String mob, Player p) {
 		for(int i = 0; i < mobTypeList.length; i++) {
 			for(int ii = 0; ii < mobTypeList[i].length; ii++) {
 				if(mob.equalsIgnoreCase((mobTypeList[i][ii].trim()))) {
 					switch(i) {
 					case 0:
-						mobType = MobType.Creeper;
-						return true;
+						return MobType.Creeper;
 					case 1:
-						mobType = MobType.Skeleton;
-						return true;
+						return mobType = MobType.Skeleton;
 					case 2:
-						mobType = MobType.Spider;
-						return true;
+						return mobType = MobType.Spider;
 					case 3:
-						mobType = MobType.Zombie;
-						return true;
+						return mobType = MobType.Zombie;
 					case 4:
-						mobType = MobType.Slime;
-						return true;
+						return mobType = MobType.Slime;
 					case 5:
-						mobType = MobType.Ghast;
-						return true;
+						return mobType = MobType.Ghast;
 					case 6:
-						mobType = MobType.Zombie_Pigman;
-						return true;
+						return mobType = MobType.Zombie_Pigman;
 					case 7:
-						mobType = MobType.Enderman;
-						return true;
+						return mobType = MobType.Enderman;
 					case 8:
-						mobType = MobType.Cave_Spider;
-						return true;
+						return mobType = MobType.Cave_Spider;
 					case 9:
-						mobType = MobType.Silverfish;
-						return true;
+						return mobType = MobType.Silverfish;
 					case 10:
-						mobType = MobType.Blaze;
-						return true;
+						return mobType = MobType.Blaze;
 					case 11:
-						mobType = MobType.Magma_Cube;
-						return true;
+						return mobType = MobType.Magma_Cube;
 					case 12:
-						mobType = MobType.Bat;
-						return true;
+						return mobType = MobType.Bat;
 					case 13:
-						mobType = MobType.Witch;
-						return true;
+						return mobType = MobType.Witch;
 					case 14:
-						mobType = MobType.Endermite;
-						return true;
+						return mobType = MobType.Endermite;
 					case 15:
-						mobType = MobType.Guardian;
-						return true;
+						return mobType = MobType.Guardian;
 					case 16:
-						mobType = MobType.Pig;
-						return true;
+						return mobType = MobType.Pig;
 					case 17:
-						mobType = MobType.Sheep;
-						return true;
+						return mobType = MobType.Sheep;
 					case 18:
-						mobType = MobType.Cow;
-						return true;
+						return mobType = MobType.Cow;
 					case 19:
-						mobType = MobType.Chicken;
-						return true;
+						return mobType = MobType.Chicken;
 					case 20:
-						mobType = MobType.Squid;
-						return true;
+						return mobType = MobType.Squid;
 					case 21:
-						mobType = MobType.Wolf;
-						return true;
+						return mobType = MobType.Wolf;
 					case 22:
-						mobType = MobType.Mooshroom;
-						return true;
+						return mobType = MobType.Mooshroom;
 					case 23:
-						mobType = MobType.Ocelot;
-						return true;
+						return mobType = MobType.Ocelot;
 					case 24:
-						mobType = MobType.Horse;
-						return true;
+						return mobType = MobType.Horse;
 					case 25:
-						mobType = MobType.Rabbit;
-						return true;
+						return mobType = MobType.Rabbit;
 					case 26:
-						mobType = MobType.Villager;
-						return true;
+						return mobType = MobType.Villager;
 					default:
-						p.sendMessage(ChatColor.BOLD + "Error 101 in switch statement of checkMobType()" +
-									" method.  Please inform the dev team " + ChatColor.GOLD +
-									"Sir/Siress " + ChatColor.GOLD + p.getName());
 						p.sendMessage(ChatColor.RED + "The Number of rows in the 2-D array mobTypeList" +
 										" now exceeds 27.");
-						mobType = MobType.NoMob;
-						return false;
+						return MobType.NoMob;
 					}
 				}
 			}
 		}
-		return false;
+		return MobType.NoMob;
 	}
+	
+	/**Displays all possible mob type attributes in a colorful, and easy to see manner
+	 * called upon the /egglist command
+	 * @param p the player who sent the /egglist command
+	 */
 	public void displayMobTypes(Player p) {
 		for(int i = 0, z = mobTypeTitles.length-1; i < mobTypeTitles.length; i++, z--) {
 			String message = ChatColor.BOLD +
@@ -640,6 +492,10 @@ public class CrystalEggFactory extends JavaPlugin {
 		p.sendMessage(wildraeStr);
 		p.sendMessage(ChatColor.BOLD + "Scroll up to see the whole list.");
 	}
+	
+	/**A way to color code a loop of messages in a fancy way
+	 * @param a the loop number
+	 */
 	public ChatColor getUniqueColor(int a) {
 		a++;
 		if(a%4 == 0)
@@ -652,6 +508,28 @@ public class CrystalEggFactory extends JavaPlugin {
 			return ChatColor.AQUA;
 		return ChatColor.YELLOW;
 	}
+	
+	/**A way to color code a loop of messages in a fancy way
+	 * @param index the loop number
+	 */
+	public ChatColor getColor(int index) {
+		index %= 4;
+		switch(index) {
+		case 0:
+			return ChatColor.LIGHT_PURPLE;
+		case 1:
+			return ChatColor.BLUE;
+		case 2:
+			return ChatColor.GOLD;
+		default:
+			return ChatColor.AQUA;
+		}
+	}
+	
+	/**Counts how many slots someone's inventory has empty, and multiplies it by 64
+	 * @param player the Player we're counting inventory slots of
+	 * @return tally the number of empty slots in inv times 64
+	 */
 	public int countFreeInventorySpace(Player player) {
 		PlayerInventory pi = player.getInventory();
 		ItemStack[] is = pi.getContents(); //returns array of ItemStacks[] from inv
@@ -664,6 +542,11 @@ public class CrystalEggFactory extends JavaPlugin {
 		
 		return tally;
 	}
+	
+	/**Tests whether a string can be converted to datatype int
+	 * @param str the String we're testing an int for
+	 * @return true if the String is a valid int value
+	 */
 	public boolean isInt(String str) {
 		try{
 			Integer.parseInt(str);
@@ -672,6 +555,11 @@ public class CrystalEggFactory extends JavaPlugin {
 			return false;
 		}
 	}
+	
+	/**Tests whether a string can be converted to datatype double
+	 * @param str the String we're testing an double for
+	 * @return true if the String is a valid double value
+	 */
 	public boolean isDouble(String str) {
 		try{
 			Double.parseDouble(str);
@@ -680,6 +568,12 @@ public class CrystalEggFactory extends JavaPlugin {
 			return false;
 		}
 	}
+	
+	/**Called onEnable(), reads in the data on the .txt file in the
+	 * server folder, and initializes the boolean netherBan, overworldBan, and endBan
+	 * variables.  This way data is saved between restarts.
+	 * The file is created if it doesn't exist.
+	 */
 	public void initializeWorldBan() {
 		File file = new File("eggbanworld.txt");
 		if(!file.exists()) {
@@ -707,12 +601,11 @@ public class CrystalEggFactory extends JavaPlugin {
 			endBan = contents.get(2).contains(cs) ? false : true;
 		}catch(IOException e) { e.printStackTrace(); }
 	}
-	/*public boolean addBanArea(double xCorner, double zCorner, String nameArea, String world) {
-        EggOutlawArea temp = new EggOutlawArea(xCorner, zCorner, nameArea, world);
-        jail.add(temp);
-        return true;
-	}*/
 
+	/**Called to remove a bannedArea
+	 * @param the EggOutlawArea object we're removing from the arraylist
+	 * @return true if the removing was successful
+	 */
 	public boolean removeBanArea(EggOutlawArea removeArea) {
         for(EggOutlawArea temp : jail) {
                 if (temp.equals(removeArea)) {
@@ -722,6 +615,9 @@ public class CrystalEggFactory extends JavaPlugin {
         }
         return false;
 	}
+	
+	/**Called from CrystalEggFactory.onEnable() to pull in the data from eggbanareas.ser
+	 * regarding all of the existing banned areas*/
 	public void initializeSerFile() {
 		File file = new File("eggbanareas.ser");
 		if(file.exists()) {
@@ -734,6 +630,9 @@ public class CrystalEggFactory extends JavaPlugin {
 			}catch(ClassNotFoundException e) { e.printStackTrace(); }
 		}
 	}
+	
+	/**Called when a change is made to the global arraylist of EggOutlawArea objects.
+	 * When the ban areas are changed, the ban areas in the .ser file are changed too.*/
 	public void updateSerFile() {
 		File file = new File("eggbanareas.ser");
 		if(!file.exists() && jail.size() > 0) {
@@ -754,17 +653,169 @@ public class CrystalEggFactory extends JavaPlugin {
 			}catch(IOException e) { e.printStackTrace(); }
 		}
 	}
-	public ChatColor getColor(int index) {
-		index %= 4;
-		switch(index) {
-		case 0:
-			return ChatColor.LIGHT_PURPLE;
-		case 1:
-			return ChatColor.BLUE;
-		case 2:
-			return ChatColor.GOLD;
-		default:
-			return ChatColor.AQUA;
-		}
+	
+
+	
+	/**Creates the data of the rae egg firework*/
+	public void createRaeFire() {
+		fire = new ItemStack(Material.FIREWORK, 1);
+		FireworkMeta fm = (FireworkMeta) fire.getItemMeta();
+		ArrayList<Color> alColor = new ArrayList<Color>();
+		alColor.add(Color.PURPLE);
+		alColor.add(Color.FUCHSIA);
+		ArrayList<Color> alFade = new ArrayList<Color>();
+		alFade.add(Color.BLUE);
+		alFade.add(Color.AQUA);
+		fm.addEffects(FireworkEffect.builder().trail(true).withColor(alColor).withFade(alFade).with(Type.BALL_LARGE).build());
+		fm.setPower(2);
+//####################################################################
+		ArrayList<String> lore = new ArrayList<String>();
+		lore.add(ChatColor.LIGHT_PURPLE + "jflory7 isn't here to save you now");
+		lore.add(ChatColor.RED + "unleash at your own peril");
+		fm.setLore(lore);
+//####################################################################
+		fm.addEnchant(Enchantment.ARROW_FIRE, 1, false);
+		fm.setDisplayName(ChatColor.RED + "Wild Raeganrr Spawn Egg");
+		fire.setItemMeta(fm);
+	}
+	
+	/**This will create a map linking mobtypes to their specified damage value*/
+	public void createMobTypeToDataMap() {
+		ItemStack god;
+		god = new ItemStack(Material.MONSTER_EGG, 1, (short)50);
+		ItemMeta im = god.getItemMeta();
+		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
+		god.setItemMeta(im);
+		map.put(MobType.Creeper, god);
+		god = new ItemStack(Material.MONSTER_EGG, 1, (short)51);
+		im = god.getItemMeta();
+		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
+		god.setItemMeta(im);
+		map.put(MobType.Skeleton, god);
+		god = new ItemStack(Material.MONSTER_EGG, 1, (short)52);
+		im = god.getItemMeta();
+		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
+		god.setItemMeta(im);
+		map.put(MobType.Spider, god);
+		god = new ItemStack(Material.MONSTER_EGG, 1, (short)54);
+		im = god.getItemMeta();
+		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
+		god.setItemMeta(im);
+		map.put(MobType.Zombie, god);
+		god = new ItemStack(Material.MONSTER_EGG, 1, (short)55);
+		im = god.getItemMeta();
+		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
+		god.setItemMeta(im);
+		map.put(MobType.Slime, god);
+		god = new ItemStack(Material.MONSTER_EGG, 1, (short)56);
+		im = god.getItemMeta();
+		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
+		god.setItemMeta(im);
+		map.put(MobType.Ghast, god);
+		god = new ItemStack(Material.MONSTER_EGG, 1, (short)57);
+		im = god.getItemMeta();
+		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
+		god.setItemMeta(im);
+		map.put(MobType.Zombie_Pigman, god);
+		god = new ItemStack(Material.MONSTER_EGG, 1, (short)58);
+		im = god.getItemMeta();
+		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
+		god.setItemMeta(im);
+		map.put(MobType.Enderman, god);
+		god = new ItemStack(Material.MONSTER_EGG, 1, (short)59);
+		im = god.getItemMeta();
+		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
+		god.setItemMeta(im);
+		map.put(MobType.Cave_Spider, god);
+		god = new ItemStack(Material.MONSTER_EGG, 1, (short)60);
+		im = god.getItemMeta();
+		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
+		god.setItemMeta(im);
+		map.put(MobType.Silverfish, god);
+		god = new ItemStack(Material.MONSTER_EGG, 1, (short)61);
+		im = god.getItemMeta();
+		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
+		god.setItemMeta(im);
+		map.put(MobType.Blaze, god);
+		god = new ItemStack(Material.MONSTER_EGG, 1, (short)62);
+		im = god.getItemMeta();
+		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
+		god.setItemMeta(im);
+		map.put(MobType.Magma_Cube, god);
+		god = new ItemStack(Material.MONSTER_EGG, 1, (short)65);
+		im = god.getItemMeta();
+		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
+		god.setItemMeta(im);
+		map.put(MobType.Bat, god);
+		god = new ItemStack(Material.MONSTER_EGG, 1, (short)66);
+		im = god.getItemMeta();
+		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
+		god.setItemMeta(im);
+		map.put(MobType.Witch, god);
+		god = new ItemStack(Material.MONSTER_EGG, 1, (short)67);
+		im = god.getItemMeta();
+		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
+		god.setItemMeta(im);
+		map.put(MobType.Endermite, god);
+		god = new ItemStack(Material.MONSTER_EGG, 1, (short)68);
+		im = god.getItemMeta();
+		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
+		god.setItemMeta(im);
+		map.put(MobType.Guardian, god);
+		god = new ItemStack(Material.MONSTER_EGG, 1, (short)90);
+		im = god.getItemMeta();
+		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
+		god.setItemMeta(im);
+		map.put(MobType.Pig, god);
+		god = new ItemStack(Material.MONSTER_EGG, 1, (short)91);
+		im = god.getItemMeta();
+		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
+		god.setItemMeta(im);
+		map.put(MobType.Sheep, god);
+		god = new ItemStack(Material.MONSTER_EGG, 1, (short)92);
+		im = god.getItemMeta();
+		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
+		god.setItemMeta(im);
+		map.put(MobType.Cow, god);
+		god = new ItemStack(Material.MONSTER_EGG, 1, (short)93);
+		im = god.getItemMeta();
+		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
+		god.setItemMeta(im);
+		map.put(MobType.Chicken, god);
+		god = new ItemStack(Material.MONSTER_EGG, 1, (short)94);
+		im = god.getItemMeta();
+		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
+		god.setItemMeta(im);
+		map.put(MobType.Squid, god);
+		god = new ItemStack(Material.MONSTER_EGG, 1, (short)95);
+		im = god.getItemMeta();
+		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
+		god.setItemMeta(im);
+		map.put(MobType.Wolf, god);
+		god = new ItemStack(Material.MONSTER_EGG, 1, (short)96);
+		im = god.getItemMeta();
+		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
+		god.setItemMeta(im);
+		map.put(MobType.Mooshroom, god);
+		god = new ItemStack(Material.MONSTER_EGG, 1, (short)98);
+		im = god.getItemMeta();
+		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
+		god.setItemMeta(im);
+		map.put(MobType.Ocelot, god);
+		god = new ItemStack(Material.MONSTER_EGG, 1, (short)100);
+		im = god.getItemMeta();
+		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
+		god.setItemMeta(im);
+		map.put(MobType.Horse, god);
+		god = new ItemStack(Material.MONSTER_EGG, 1, (short)101);
+		im = god.getItemMeta();
+		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
+		god.setItemMeta(im);
+		map.put(MobType.Rabbit, god);
+		god = new ItemStack(Material.MONSTER_EGG, 1, (short)120);
+		im = god.getItemMeta();
+		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
+		god.setItemMeta(im);
+		map.put(MobType.Villager, god);
 	}
 }
