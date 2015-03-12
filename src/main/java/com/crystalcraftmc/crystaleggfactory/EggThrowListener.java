@@ -18,14 +18,17 @@
 package com.crystalcraftmc.crystaleggfactory;
 
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockDispenseEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
@@ -79,42 +82,66 @@ public class EggThrowListener implements Listener {
 		}
 	}
 	
-	/**Prevents gen2 eggs from changing spawners, and prevents any eggs from
-	 * being used in banned areas (except ops (by default) )
+	/**Based off the configuration, this listener
+	 * will respond to the nerfAll, and Permissions to
+	 * allow/disallow certain events
 	 * @param e the PlayerInteractEvent we're testing
 	 */
 	@EventHandler
 	public void stopSpawnerChanging(PlayerInteractEvent e) {
 		if(e.getPlayer() != null) {
+			Player p = e.getPlayer();
 			//action = "RIGHT_CLICK_BLOCK"
 			//getClickedBlock() type="MOB_SPAWNER"
-			if(e.getAction().toString().equals("RIGHT_CLICK_BLOCK") &&
-						e.getPlayer().getItemInHand().isSimilar(fire)) {
-				if(checkOutlawAreas(e)) return;
-
-				if(e.getPlayer().getItemInHand().getEnchantmentLevel(Enchantment.ARROW_FIRE) == 1) {
-					if(this.theBlocksAboveClear(e.getClickedBlock())) {
-						new CakeAnimation(e.getClickedBlock(), globalEgg);
-					}
-					else {
-						e.getPlayer().sendMessage(ChatColor.RED + "Error; " + ChatColor.GOLD +
-									"the " + String.valueOf(CrystalEggFactory.NUMCAKES) +
-									" blocks above the WildRaeganrr rocket must be clear.");
+			if(e.getAction() == Action.RIGHT_CLICK_BLOCK) {
+				if(!Utility.hasPerms(p, PermType.THROWBAN) && 
+						(this.isAnyKindOfEgg(e.getPlayer().getItemInHand()) ||
+								(e.getPlayer().getItemInHand().isSimilar(fire) && 
+										e.getPlayer().getItemInHand().containsEnchantment(Enchantment.ARROW_FIRE)))) {
+					if(this.checkOutlawAreas(e)) {
+						e.getPlayer().sendMessage(ChatColor.AQUA + "You don't have permission to use " +
+								"spawn eggs in this area.");
 						e.setCancelled(true);
+						return;
 					}
 				}
 			}
-			else if(e.getAction().toString().equals("RIGHT_CLICK_BLOCK") &&
+			
+			if(e.getAction() == Action.RIGHT_CLICK_BLOCK &&
+					e.getPlayer().getItemInHand().isSimilar(fire)) {
+				if(e.getPlayer().getItemInHand().containsEnchantment(Enchantment.ARROW_FIRE)) {
+					if(this.checkOutlawAreas(e) && !Utility.hasPerms(p, PermType.THROWBAN)) {
+						e.setCancelled(true);
+						e.getPlayer().sendMessage(ChatColor.BLUE + "You do not have permission to use spawn eggs in this area.");
+					}
+					else {
+						if(this.theBlocksAboveClear(e.getClickedBlock())) {
+							new CakeAnimation(e.getClickedBlock(), globalEgg);
+						}
+						else {
+							e.getPlayer().sendMessage(ChatColor.GOLD + "Error, the " + String.valueOf(CrystalEggFactory.NUMCAKES) + 
+									" cakes above the clicked block are not clear.");
+							e.setCancelled(true);
+						}
+					}
+				}
+			}
+			else if(e.getAction() == Action.RIGHT_CLICK_BLOCK && 
+					e.getClickedBlock().getType() == Material.MOB_SPAWNER &&
 					this.isAnyKindOfEgg(e.getPlayer().getItemInHand())) {
-				
-				if(checkOutlawAreas(e)) return;
-				ItemStack is = e.getPlayer().getItemInHand();
-				if(e.getClickedBlock().getType().toString().equals("MOB_SPAWNER")) {
-					if(is.containsEnchantment(Enchantment.ARROW_INFINITE)) {
-						e.getPlayer().sendMessage("Cancelled event");
+				if(CrystalEggFactory.nerfAll) {
+					if(!Utility.hasPerms(p, PermType.GEN2)) {
+						e.getPlayer().sendMessage(ChatColor.AQUA + "You are holding a nerfed egg. Event cancelled.");
 						e.setCancelled(true);
 					}
-					
+				}
+				else {
+					if(e.getPlayer().getItemInHand().containsEnchantment(Enchantment.ARROW_INFINITE) &&
+							!Utility.hasPerms(p, PermType.GEN2)) {
+						e.getPlayer().sendMessage(ChatColor.AQUA + "You don't have permission to change " +
+								"a spawner with an enchanted egg.");
+						e.setCancelled(true);
+					}
 				}
 			}
 		}
@@ -141,6 +168,8 @@ public class EggThrowListener implements Listener {
 	 */
 	public boolean isAnyKindOfEgg(ItemStack isE) {
 		boolean isSpawnEgg = false;
+		if(isE.getType() != Material.MONSTER_EGG)
+			return false;
 		for(int i = 0; i < 27; i++) {
 			if(isE.getData().getData() == icon[i].getData().getData())
 				isSpawnEgg = true;
@@ -238,38 +267,6 @@ public class EggThrowListener implements Listener {
 	 * @return true if the event should be cancelled
 	 */
 	public boolean checkOutlawAreas (PlayerInteractEvent e) {
-		if(e.getPlayer().hasPermission("CrystalEggFactory.use")) {
-			if(e.getPlayer().getItemInHand().isSimilar(fire) &&
-					e.getPlayer().getItemInHand().getEnchantmentLevel(Enchantment.ARROW_FIRE) == 1) {
-				if(this.theBlocksAboveClear(e.getClickedBlock()))
-					new CakeAnimation(e.getClickedBlock(), globalEgg);
-				else {
-					e.getPlayer().sendMessage(ChatColor.RED + "Error; " + ChatColor.GOLD +
-							"the " + String.valueOf(CrystalEggFactory.NUMCAKES) +
-							" blocks above the WildRaeganrr rocket must be clear.");
-					e.setCancelled(true);
-				}
-			}
-			return true;
-		}
-		if(e.getPlayer().getWorld().getEnvironment() == Environment.NORMAL) {
-			if(globalEgg.overworldBan) {
-				e.setCancelled(true);
-				return true;
-			}
-		}
-		else if(e.getPlayer().getWorld().getEnvironment() == Environment.NETHER) {
-			if(globalEgg.netherBan) {
-				e.setCancelled(true);
-				return true;
-			}
-		}
-		else if(e.getPlayer().getWorld().getEnvironment() == Environment.THE_END) {
-			if(globalEgg.endBan) {
-				e.setCancelled(true);
-				return true;
-			}
-		}
 		int x = e.getClickedBlock().getLocation().getBlockX();
 		int z = e.getClickedBlock().getLocation().getBlockZ();
 		for(EggOutlawArea k : globalEgg.jail) {
@@ -285,7 +282,6 @@ public class EggThrowListener implements Listener {
 				else
 					archiveWorld = Environment.THE_END;
 			if (domain && range && (archiveWorld == spawnWorld)) {
-				e.setCancelled(true);
 				return true;
 			}
 		}
