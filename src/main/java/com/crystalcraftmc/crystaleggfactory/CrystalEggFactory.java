@@ -15,18 +15,6 @@
 + */
 package com.crystalcraftmc.crystaleggfactory;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
-
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
@@ -43,10 +31,16 @@ import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
-/**CrystalEggFactory is an open source plugin designed to grant ops(by default)
+import java.io.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
+
+/**
+ * CrystalEggFactory is an open source plugin designed to grant ops (by default)
  *  the ability to create spawn eggs that do not have the ability to change spawners. 
  *  (A Minecraft 1.8 Feature)
- * 
  */
 public class CrystalEggFactory extends JavaPlugin {
 	
@@ -101,8 +95,8 @@ public class CrystalEggFactory extends JavaPlugin {
 	private enum MobType { NoMob, Creeper, Skeleton, Spider, Zombie, Slime, Ghast,
 						Zombie_Pigman, Enderman, Cave_Spider, Silverfish, Blaze,
 						Magma_Cube, Bat, Witch, Endermite, Guardian, Pig, Sheep, Cow,
-						Chicken, Squid, Wolf, Mooshroom, Ocelot, Horse, Rabbit, Villager};
-	//###########################################################################################
+						Chicken, Squid, Wolf, Mooshroom, Ocelot, Horse, Rabbit, Villager}
+    //###########################################################################################
 						
 	/**A map that will be able to spit out a damage value when given a MobType value*/
 	Map<MobType, ItemStack> map = new HashMap<MobType, ItemStack>();
@@ -126,7 +120,13 @@ public class CrystalEggFactory extends JavaPlugin {
 		getLogger().info("Egg plugin enabled.");
 		this.createMobTypeToDataMap();
 		new EggThrowListener(this, fire);
-		
+
+        try {
+            MetricsLite metrics = new MetricsLite(this);
+            metrics.start();
+        } catch (IOException e) {
+            // Failed to submit the stats :-(
+        }
 	}
 	public void onDisable() {
 		getLogger().info("Egg plugin disabled.");
