@@ -15,6 +15,18 @@
 + */
 package com.crystalcraftmc.crystaleggfactory;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
+
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
@@ -31,18 +43,21 @@ import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
-
-/**
- * CrystalEggFactory is an open source plugin designed to grant ops (by default)
+/**CrystalEggFactory is an open source plugin designed to grant ops(by default)
  *  the ability to create spawn eggs that do not have the ability to change spawners. 
  *  (A Minecraft 1.8 Feature)
+ * 
  */
 public class CrystalEggFactory extends JavaPlugin {
+	
+	/**Holds the permissions for each player*/
+	public static ArrayList<PermissionE> eggPerms = new ArrayList<PermissionE>();
+	
+	/**Holds all perm type attributes*/
+	public static String[][] permTypeStr = { {"hasFullPerms", "all", "full", "fullPerms"},
+		{"canEgg", "summonEgg", "summon"}, {"canBan", "ban"}, 
+		{"noNerf", "spawnerFreedom"}, {"canThrowInBan", "throw", "ctib"},
+		{"canPerms", "eggperms", "perms"} };
 	
 	/**Holds whether all eggs are currently banned in said worlds*/
 	public boolean overworldBan, netherBan, endBan;
@@ -56,6 +71,9 @@ public class CrystalEggFactory extends JavaPlugin {
 	
 	/**Holds the data of the rae egg firework*/
 	private ItemStack fire;
+	
+	/**Holds whether spawner changes are only limited to gen2 eggs*/
+	public static boolean nerfAll = false;
 	
 	/**Lists all the aliases one can use when specifying the mobtype attribute in /egg*/
 	private String[][] mobTypeList = { {"creeper", "creepers",
@@ -95,8 +113,8 @@ public class CrystalEggFactory extends JavaPlugin {
 	private enum MobType { NoMob, Creeper, Skeleton, Spider, Zombie, Slime, Ghast,
 						Zombie_Pigman, Enderman, Cave_Spider, Silverfish, Blaze,
 						Magma_Cube, Bat, Witch, Endermite, Guardian, Pig, Sheep, Cow,
-						Chicken, Squid, Wolf, Mooshroom, Ocelot, Horse, Rabbit, Villager}
-    //###########################################################################################
+						Chicken, Squid, Wolf, Mooshroom, Ocelot, Horse, Rabbit, Villager};
+	//###########################################################################################
 						
 	/**A map that will be able to spit out a damage value when given a MobType value*/
 	Map<MobType, ItemStack> map = new HashMap<MobType, ItemStack>();
@@ -115,18 +133,13 @@ public class CrystalEggFactory extends JavaPlugin {
 	
 	public void onEnable() {
 		this.initializeWorldBan();
+		this.initializePermsFile();
 		this.initializeSerFile();
 		this.createRaeFire();
 		getLogger().info("Egg plugin enabled.");
 		this.createMobTypeToDataMap();
 		new EggThrowListener(this, fire);
-
-        try {
-            MetricsLite metrics = new MetricsLite(this);
-            metrics.start();
-        } catch (IOException e) {
-            // Failed to submit the stats :-(
-        }
+		
 	}
 	public void onDisable() {
 		getLogger().info("Egg plugin disabled.");
@@ -135,12 +148,14 @@ public class CrystalEggFactory extends JavaPlugin {
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 		if(sender instanceof Player) {
 			Player p = ((Player) sender);
-			if(p.hasPermission("CrystalEggFactory.use")) {
-				if(args.length == 0 && label.equalsIgnoreCase("egglist")) {
+			
+				if(args.length == 0 && label.equalsIgnoreCase("egglist") && 
+						Utility.hasPerms(p, PermType.EGG)) {
 					this.displayMobTypes(p);
 					return true;
 				}
-				else if(args.length == 2 && label.equalsIgnoreCase("egg")) {
+				else if(args.length == 2 && label.equalsIgnoreCase("egg") && 
+						Utility.hasPerms(p, PermType.EGG)) {
 					if(label.equalsIgnoreCase("egg")) {
 						boolean spawnRae = false;
 						for(int i = 0; i < raeAlias.length; i++) {
@@ -235,7 +250,8 @@ public class CrystalEggFactory extends JavaPlugin {
 						return false;
 						}
 				}
-				else if(label.equals("eggbanworld") && args.length == 2) {
+				else if(label.equals("eggbanworld") && args.length == 2 &&
+							Utility.hasPerms(p, PermType.BAN)) {
 					if((args[0].equalsIgnoreCase("overworld") ||
 							args[0].equalsIgnoreCase("nether") ||
 							args[0].equalsIgnoreCase("end")) && (args[1].equalsIgnoreCase("true") ||
@@ -295,6 +311,7 @@ public class CrystalEggFactory extends JavaPlugin {
 							pw.flush();
 							pw.println(contents.get(2));
 							pw.flush();
+							pw.println(contents.get(3));
 							pw.close();
 						}catch(IOException e) { e.printStackTrace(); }
 						return true;
@@ -302,16 +319,19 @@ public class CrystalEggFactory extends JavaPlugin {
 					else
 						return false;
 				}
-				else if(label.equals("eggbanlist") && args.length == 0) {
+				else if(label.equals("eggbanlist") && args.length == 0 &&
+						Utility.hasPerms(p, PermType.BAN)) {
 					p.sendMessage(ChatColor.GREEN + "Overworld Egg Ban=" + String.valueOf(overworldBan));
 					p.sendMessage(ChatColor.RED + "Nether Egg Ban=" + String.valueOf(netherBan));
 					p.sendMessage(ChatColor.BLUE + "End Egg Ban=" + String.valueOf(endBan));
+					p.sendMessage(ChatColor.AQUA + "Only CrystalEggs Are Nerfed=" + String.valueOf(!nerfAll));
 					for(int i = 0; i < jail.size(); i++) {
 						p.sendMessage(this.getColor(i) + jail.get(i).toString());
 					}
 					return true;
 				}
-				else if(label.equals("eggban") && args.length == 5) {
+				else if(label.equals("eggban") && args.length == 5 &&
+						Utility.hasPerms(p, PermType.BAN)) {
 					boolean isValid = true;
 					for(int i = 0; i < 4; i++) {
 						if(!isDouble(args[i]))
@@ -356,7 +376,8 @@ public class CrystalEggFactory extends JavaPlugin {
 						return true;
 					}
 				}
-				else if(label.equalsIgnoreCase("eggunban") && args.length == 1) {
+				else if(label.equalsIgnoreCase("eggunban") && args.length == 1 &&
+						Utility.hasPerms(p, PermType.BAN)) {
 					int removeIndex=-1;
 					for(int i = 0; i < jail.size(); i++) {
 						if(jail.get(i).getID().equals(args[0]))
@@ -376,14 +397,190 @@ public class CrystalEggFactory extends JavaPlugin {
 					}
 					return true;
 				}
-				return false;
-			
-			}
-			else {
-				p.sendMessage(ChatColor.GOLD + "You do not have permission to use that command");
+				else if(label.equalsIgnoreCase("eggperms") && args.length == 1 &&
+							Utility.hasPerms(p, PermType.PERMS)) {
+						for(int i = 0; i < eggPerms.size(); i++) {
+							if(args[0].equals(eggPerms.get(i).name)) {
+								p.sendMessage(this.getColor(i)+ eggPerms.get(i).toString());
+								return true;
+							}
+						}
+						p.sendMessage(ChatColor.GOLD + args[0] + ChatColor.AQUA +
+								" was not found in the records. The argument is case-sensitive.");
+						p.sendMessage(ChatColor.GREEN + "Use /eggperms to see the list of all players and" +
+								" their permissions.");
+						return true;
+				}
+				else if(label.equalsIgnoreCase("eggperms") && args.length == 0 &&
+						Utility.hasPerms(p, PermType.PERMS)) {
+					if(eggPerms.size() > 0) {
+						for(int i = 0; i < eggPerms.size(); i++) {
+							p.sendMessage(this.getColor(i)+ eggPerms.get(i).toString());
+						}
+					}
+					else {
+						p.sendMessage(ChatColor.GOLD + "No players have special permissions at this time.");
+					}
+					return true;
+				}
+				else if(label.equalsIgnoreCase("eggperms") && args.length == 3 &&
+						Utility.hasPerms(p, PermType.PERMS)) {
+						PermType toSet = Utility.getPermType(args[1]);
+						if(toSet != PermType.NULL) {
+							if(args[2].equalsIgnoreCase("true") || args[2].equalsIgnoreCase("false")) {
+								boolean setPermB = args[2].equalsIgnoreCase("true") ? true : false;
+								int index = -1;
+								for(int i = 0; i < eggPerms.size() && index == -1; i++) {
+									if(args[0].equals(eggPerms.get(i).name)) {
+										index = i;
+									}
+								}
+								if(index == -1 && !setPermB) {
+									p.sendMessage(ChatColor.GOLD + args[0] + " already has no permissions.");
+									return true;
+								}
+								else if(index == -1) {
+									eggPerms.add(new PermissionE(args[0], toSet));
+									this.updatePerms();
+									p.sendMessage(ChatColor.GOLD + "Success.  " +
+											ChatColor.RED + args[0] + ChatColor.GOLD + " current perms:");
+									p.sendMessage(ChatColor.AQUA + eggPerms.get(eggPerms.size()-1).toString());
+									return true;
+								}
+								else {
+									eggPerms.get(index).setPerm(toSet, setPermB);
+									p.sendMessage(ChatColor.GOLD + "Success.  " +
+											ChatColor.RED + args[0] + ChatColor.GOLD + " current perms:");
+									p.sendMessage(ChatColor.AQUA + eggPerms.get(eggPerms.size()-1).toString());
+									if(eggPerms.get(index).hasNoPerms())
+										eggPerms.remove(index);
+									this.updatePerms();
+									return true;
+								}
+							}
+							else {
+								p.sendMessage(ChatColor.GOLD + args[2] + ChatColor.RED +
+										" is not \'true\' or \'false\'");
+								p.sendMessage("/<command><player_name><perm_type><true / false>");
+								return true;
+							}
+						}
+						else {
+							p.sendMessage(ChatColor.GOLD + args[1] + ChatColor.RED +
+									" is not a valid perm-type.  Use /eggpermslist to see all" +
+									" valid perm-types.");
+							p.sendMessage("/<command><player_name><perm_type><true / false>");
+							return true;
+						}
+				
+				}
+				else if(label.equalsIgnoreCase("eggpermremove") && args.length == 1 &&
+						Utility.hasPerms(p, PermType.PERMS)) {
+					for(int i = 0; i < eggPerms.size(); i++) {
+						if(args[0].equalsIgnoreCase(eggPerms.get(i).name)) {
+							eggPerms.remove(i);
+							p.sendMessage(ChatColor.GOLD + "Perms have successfully been removed from " +
+									ChatColor.RED + args[0] + ChatColor.GOLD + ".");
+							this.updatePerms();
+							return true;
+						}
+					}
+					
+					p.sendMessage(ChatColor.GOLD + "Player " + args[0] + " was not found in the Permissions record.");
+					p.sendMessage(ChatColor.GREEN + "Note this command is case-sensitive. Type /eggpermsplayerlist " +
+							"to view all players and their permissions.");
+					return true;
+				}
+				else if(label.equalsIgnoreCase("eggpermslist") && args.length == 0 &&
+						Utility.hasPerms(p, PermType.PERMS)) {
+					ChatColor aq = ChatColor.AQUA;
+					ChatColor go = ChatColor.GOLD;
+					for(int i = 0; i < this.permTypeStr.length; i++) {
+						for(int ii = 0; ii < this.permTypeStr[i].length; ii++) {
+							if(ii == 0) {
+								switch(i) {
+								case 0:
+									p.sendMessage(aq+permTypeStr[i][ii] + go +
+											" Enables Permissions for everything.  Aliases:");
+									break;
+								case 1:
+									p.sendMessage(aq+permTypeStr[i][ii] + go +
+											" Enables Permissions for summoning eggs with /egg, " +
+											"and using /egglist.  Aliases:");
+									break;
+								case 2:
+									p.sendMessage(aq+permTypeStr[i][ii] + go +
+											" Enables Permissions for using the /eggban, " +
+											"/eggunban, /eggbanlist, and /eggbanworld Aliases:");
+									break;
+								case 3:
+									p.sendMessage(aq+permTypeStr[i][ii] + go +
+											" Enables Permissions for using CrystalEggs" +
+											" to change spawners.  Aliases:");
+									break;
+								case 4:
+									p.sendMessage(aq+permTypeStr[i][ii] + go +
+											" Enables Permissions for the use of spawn eggs" +
+											" in banned areas.  Aliases:");
+									break;
+								case 5:
+									p.sendMessage(aq+permTypeStr[i][ii] + go +
+											" Enables Permissions for using the /eggperms,"
+											+ " /eggperms<player>, /eggperms<player>" +
+											"<perm-type><true/false>, /eggpermremove<player>, and" +
+											" /eggpermslist commands  Aliases:");
+									break;
+								}
+							}
+							else {
+								p.sendMessage(ChatColor.GREEN + permTypeStr[i][ii] + "    ");
+							}
+						}
+					}
+					return true;
+				}
+				else if(label.equalsIgnoreCase("eggnerfall") && args.length == 1 &&
+						Utility.hasPerms(p, PermType.BAN)) {
+					if(args[0].equalsIgnoreCase("true") || args[0].equalsIgnoreCase("false")) {
+						boolean setN = args[0].equalsIgnoreCase("true") ? true : false;
+						File file = new File("eggbanworld.txt");
+						if(!file.exists())
+							this.initializeWorldBan();
+						ArrayList<String> contents = new ArrayList<String>();
+						try{
+							Scanner in = new Scanner(file);
+							while(in.hasNext())
+								contents.add(in.nextLine());
+							in.close();
+							nerfAll = setN;
+							if(!setN)
+								contents.set(3, "OnlyNerfCrystalEggs=true");
+							else
+								contents.set(3, "OnlyNerfCrystalEggs=false");
+							PrintWriter pw = new PrintWriter("eggbanworld.txt");
+							pw.println(contents.get(0));
+							pw.flush();
+							pw.println(contents.get(1));
+							pw.flush();
+							pw.println(contents.get(2));
+							pw.flush();
+							pw.println(contents.get(3));
+							pw.close();
+							in.close();
+						}catch(IOException e) { e.printStackTrace(); }
+						if(setN)
+							p.sendMessage(ChatColor.GOLD + "Now no eggs work to change spawners.");
+						else
+							p.sendMessage(ChatColor.GOLD + "Now just CrystalEggs don't work to change spawners.");
+						return true;
+					}
+					else {
+						p.sendMessage(ChatColor.GOLD + "Error; " + ChatColor.RED + args[0] +
+								ChatColor.GOLD + " is not \'true\' or \'false\'.");
+						return false;
+					}
+				}
 				return true;
-			}
-			
 		}
 		return false;
 	}
@@ -585,6 +782,7 @@ public class CrystalEggFactory extends JavaPlugin {
 				pw.flush();
 				pw.println("end=false");
 				pw.flush();
+				pw.println("OnlyNerfCrystalEggs=true");
 				pw.close();
 			}catch(IOException e) { e.printStackTrace(); }
 		}
@@ -599,6 +797,7 @@ public class CrystalEggFactory extends JavaPlugin {
 			overworldBan = contents.get(0).contains(cs) ? false : true;
 			netherBan = contents.get(1).contains(cs) ? false : true;
 			endBan = contents.get(2).contains(cs) ? false : true;
+			nerfAll = contents.get(3).contains(cs) ? true : false;
 		}catch(IOException e) { e.printStackTrace(); }
 	}
 
@@ -626,6 +825,7 @@ public class CrystalEggFactory extends JavaPlugin {
 				ObjectInputStream ois = new ObjectInputStream(fis);
 				jail = (ArrayList<EggOutlawArea>)ois.readObject();
 				ois.close();
+				fis.close();
 			}catch(IOException e) { e.printStackTrace(); 
 			}catch(ClassNotFoundException e) { e.printStackTrace(); }
 		}
@@ -641,6 +841,7 @@ public class CrystalEggFactory extends JavaPlugin {
 				ObjectOutputStream oos = new ObjectOutputStream(fos);
 				oos.writeObject(jail);
 				oos.close();
+				fos.close();
 			}catch(IOException e) { e.printStackTrace(); }
 		}
 		else if(jail.size() > 0 && file.exists()){
@@ -650,6 +851,7 @@ public class CrystalEggFactory extends JavaPlugin {
 				ObjectOutputStream oos = new ObjectOutputStream(fos);
 				oos.writeObject(jail);
 				oos.close();
+				fos.close();
 			}catch(IOException e) { e.printStackTrace(); }
 		}
 	}
@@ -667,7 +869,7 @@ public class CrystalEggFactory extends JavaPlugin {
 		alFade.add(Color.BLUE);
 		alFade.add(Color.AQUA);
 		fm.addEffects(FireworkEffect.builder().trail(true).withColor(alColor).withFade(alFade).with(Type.BALL_LARGE).build());
-		fm.setPower(2);
+		fm.setPower(1);
 //####################################################################
 		ArrayList<String> lore = new ArrayList<String>();
 		lore.add(ChatColor.LIGHT_PURPLE + "jflory7 isn't here to save you now");
@@ -678,6 +880,38 @@ public class CrystalEggFactory extends JavaPlugin {
 		fm.setDisplayName(ChatColor.RED + "Wild Raeganrr Spawn Egg");
 		fire.setItemMeta(fm);
 	}
+	
+	/**This will initilize the list of nonop permissions*/
+	public void initializePermsFile() {
+		File file = new File("CrystalEggFactoryPerms.ser");
+		if(file.exists()) {
+			try{
+				FileInputStream fis = new FileInputStream(file);
+				ObjectInputStream ois = new ObjectInputStream(fis);
+				eggPerms = (ArrayList<PermissionE>)ois.readObject();
+				ois.close();
+				fis.close();
+			}catch(IOException e) { e.printStackTrace(); 
+			}catch(ClassNotFoundException e) { e.printStackTrace(); }
+		}
+	}
+	
+	/**update the Perms*/
+	public void updatePerms() {
+		File file = new File("CrystalEggFactoryPerms.ser");
+		if(file.exists()) {
+			file.delete();
+		}
+		try{
+			FileOutputStream fos = new FileOutputStream(file);
+			ObjectOutputStream oos = new ObjectOutputStream(fos);
+			oos.writeObject(eggPerms);
+			oos.close();
+			fos.close();
+		}catch(IOException e) { e.printStackTrace(); }
+	}
+	
+	
 	
 	/**This will create a map linking mobtypes to their specified damage value*/
 	public void createMobTypeToDataMap() {
