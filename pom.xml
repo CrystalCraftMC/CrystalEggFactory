@@ -21,6 +21,7 @@
 	<groupId>com.crystalcraftmc</groupId>
 	<artifactId>CrystalEggFactory</artifactId>
 	<version>1.0.0</version>
+
 	<profiles>
 		<profile>
 			<id>com.crystalcraftmc.crystaleggfactory</id>
@@ -47,10 +48,11 @@
 							<target>1.7</target>
 						</configuration>
 					</plugin>
-				</plugins>
+                </plugins>
 			</build>
 		</profile>
 	</profiles>
+
 	<repositories>
 		<repository>
 			<id>bukkit-repo</id>
@@ -61,6 +63,7 @@
 			<url>https://hub.spigotmc.org/nexus/content/groups/public/</url>
 		</repository>
 	</repositories>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.spigotmc</groupId>
