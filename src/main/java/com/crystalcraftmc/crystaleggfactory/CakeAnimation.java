@@ -23,9 +23,8 @@ import org.bukkit.block.Block;
 
 /**The cake animation that is shown upon using a Raeganrr spawnegg*/
 public class CakeAnimation {
+	
 	private CrystalEggFactory plugin;
-	
-	
 //####################################################################
 	
 	/**Initializes a cake animation object
@@ -33,8 +32,8 @@ public class CakeAnimation {
 	 * @param plugin the main plugin class
 	 */
 	public CakeAnimation(Block b, CrystalEggFactory plugin) {
-		this.plugin = plugin;
 		Location loc = b.getLocation();
+		this.plugin=plugin;
 		for(int i = 0; i < 5; i++) {
 			loc.setY(b.getLocation().getY()+(i+1));
 			this.hailMary(loc.getBlock(), i);

@@ -1,30 +1,69 @@
 name: CrystalEggFactory
 main: com.crystalcraftmc.crystaleggfactory.CrystalEggFactory
-version: 1.1
+version: 2.0
 authors: [Jwood9198, Jacc734, jflory7]
-
 commands:
    egg:
-      description: Used to place spawn eggs in your inventory which in the future will not be able to change spawners
-      usage: /<command> <mob-type> <amountEggs>
-   egglist:
-      description: Will display all possible values of the mob-type attribute
-      usage: /<command>
-   eggban:
-      description: Used to ban the use of eggs in a particular area
-      usage: /<command><x1Coord><z1Coord><x2Coord><z2Coord><name_id>
-   eggbanlist:
-      description: Lists the names and locations of all egg-banned areas
-      usage: /<command>
-   eggunban:
-      description: Unbans egg-use in the specified id_name area
-      usage: /<command><name_id>
-   eggbanworld:
-      description: Allow/disallow eggs in a certain world (banned areas still apply)
-      usage: /<command><end/overworld/nether><true/false>
-         
-permissions:
-   CrystalEggFactory.use:
       description:
-         Allows use of all CrystalEggFactory commands, as well as the ability to bypass banned egg areas
-      default: op
+         Used to place spawn eggs in your inventory which in the future will not be able to change spawners
+      usage:
+         /<command> <mob-type> <amountEggs>
+   egglist:
+      description:
+         Will display all possible values of the mob-type attribute
+      usage:
+         /<command>
+   eggban:
+      description:
+         Used to ban the use of eggs in a particular area
+      usage:
+         /<command><x1Coord><z1Coord><x2Coord><z2Coord><name_id>
+   eggbanlist:
+      description:
+         Lists the names and locations of all egg-banned areas
+      usage:
+         /<command>
+   eggunban:
+      description:
+         Unbans egg-use in the specified id_name area
+      usage:
+         /<command><name_id>
+   eggbanworld:
+      description:
+         Allow/disallow eggs in a certain world (banned areas still apply)
+      usage:
+         /<command><end/overworld/nether><true/false>
+   eggpermslist:
+      description:
+         Describes the different values of the perm type attribute for the /eggperms command
+      usage:
+         /<command>
+   eggpermremove:
+      description:
+         Removes said player of any/all CrystalEggFactory permissions unless they're an op
+      usage:
+         /<command><player>
+   eggperms:
+      description:
+         Allows one to customize different CrystalEggFactory commands unto specific people.
+          For a list of different perm type values and their descriptions use /eggpermslist
+      usage:
+         /<command><player_name><perm type><true / false>
+   eggperms:
+      description:
+         Allows one to see the CrystalEggFactory permissions of a specified player
+      usage:
+         /<command><player_name>
+   eggperms:
+      description:
+         Allows one to see the CrystallEggFactory permissions of all players
+      usage:
+         /<command>
+   eggNerfAll:
+      description:
+         Determines whether only CrystalEggs can't change spawners, or all eggs can't change spawners
+      usage:
+         /<command><true / false>
+         
+
+         
