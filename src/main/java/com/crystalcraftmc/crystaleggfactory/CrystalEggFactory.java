@@ -132,6 +132,7 @@ public class CrystalEggFactory extends JavaPlugin {
 	private MobType mobType = MobType.NoMob;
 	
 	public void onEnable() {
+		createFile();
 		this.initializeWorldBan();
 		this.initializePermsFile();
 		this.initializeSerFile();
@@ -256,10 +257,11 @@ public class CrystalEggFactory extends JavaPlugin {
 							args[0].equalsIgnoreCase("nether") ||
 							args[0].equalsIgnoreCase("end")) && (args[1].equalsIgnoreCase("true") ||
 									args[1].equalsIgnoreCase("false"))) {
-						File file = new File("eggbanworld.txt");
+						createFile();
+						File file = new File("crystaleggfactory\\eggbanworld.txt");
 						if(!file.exists()) {
 							try{
-								PrintWriter pw = new PrintWriter("eggbanworld.txt");
+								PrintWriter pw = new PrintWriter("crystaleggfactory\\eggbanworld.txt");
 								pw.println("overworld=false");
 								pw.flush();
 								pw.println("nether=false");
@@ -543,7 +545,8 @@ public class CrystalEggFactory extends JavaPlugin {
 						Utility.hasPerms(p, PermType.BAN)) {
 					if(args[0].equalsIgnoreCase("true") || args[0].equalsIgnoreCase("false")) {
 						boolean setN = args[0].equalsIgnoreCase("true") ? true : false;
-						File file = new File("eggbanworld.txt");
+						createFile();
+						File file = new File("crystaleggfactory\\eggbanworld.txt");
 						if(!file.exists())
 							this.initializeWorldBan();
 						ArrayList<String> contents = new ArrayList<String>();
@@ -772,10 +775,11 @@ public class CrystalEggFactory extends JavaPlugin {
 	 * The file is created if it doesn't exist.
 	 */
 	public void initializeWorldBan() {
-		File file = new File("eggbanworld.txt");
+		createFile();
+		File file = new File("crystaleggfactory\\eggbanworld.txt");
 		if(!file.exists()) {
 			try{
-				PrintWriter pw = new PrintWriter("eggbanworld.txt");
+				PrintWriter pw = new PrintWriter("crystaleggfactory\\eggbanworld.txt");
 				pw.println("overworld=false");
 				pw.flush();
 				pw.println("nether=false");
@@ -818,7 +822,8 @@ public class CrystalEggFactory extends JavaPlugin {
 	/**Called from CrystalEggFactory.onEnable() to pull in the data from eggbanareas.ser
 	 * regarding all of the existing banned areas*/
 	public void initializeSerFile() {
-		File file = new File("eggbanareas.ser");
+		createFile();
+		File file = new File("crystaleggfactory\\eggbanareas.ser");
 		if(file.exists()) {
 			try{
 				FileInputStream fis = new FileInputStream(file);
@@ -834,7 +839,8 @@ public class CrystalEggFactory extends JavaPlugin {
 	/**Called when a change is made to the global arraylist of EggOutlawArea objects.
 	 * When the ban areas are changed, the ban areas in the .ser file are changed too.*/
 	public void updateSerFile() {
-		File file = new File("eggbanareas.ser");
+		createFile();
+		File file = new File("crystaleggfactory\\eggbanareas.ser");
 		if(!file.exists() && jail.size() > 0) {
 			try{
 				FileOutputStream fos = new FileOutputStream(file);
@@ -883,7 +889,8 @@ public class CrystalEggFactory extends JavaPlugin {
 	
 	/**This will initilize the list of nonop permissions*/
 	public void initializePermsFile() {
-		File file = new File("CrystalEggFactoryPerms.ser");
+		createFile();
+		File file = new File("crystaleggfactory\\CrystalEggFactoryPerms.ser");
 		if(file.exists()) {
 			try{
 				FileInputStream fis = new FileInputStream(file);
@@ -898,7 +905,8 @@ public class CrystalEggFactory extends JavaPlugin {
 	
 	/**update the Perms*/
 	public void updatePerms() {
-		File file = new File("CrystalEggFactoryPerms.ser");
+		createFile();
+		File file = new File("crystaleggfactory\\CrystalEggFactoryPerms.ser");
 		if(file.exists()) {
 			file.delete();
 		}
@@ -1051,5 +1059,12 @@ public class CrystalEggFactory extends JavaPlugin {
 		im.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
 		god.setItemMeta(im);
 		map.put(MobType.Villager, god);
+	}
+	
+	/**This will create the folder where files are stored if it doesn't exist*/
+	public void createFile() {
+		File file = new File("crystaleggfactory");
+		if(!file.exists())
+			file.mkdir();
 	}
 }
