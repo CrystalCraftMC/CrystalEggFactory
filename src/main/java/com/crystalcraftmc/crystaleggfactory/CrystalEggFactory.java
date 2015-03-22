@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
@@ -202,6 +203,7 @@ public class CrystalEggFactory extends JavaPlugin {
 							}
 						}
 						else if(this.checkMobType(args[0], p) != MobType.NoMob) {
+							mobType = checkMobType(args[0], p);
 							if(this.isInt(args[1])) {
 								int amount = Integer.parseInt(args[1]);
 								if(amount == 0)
@@ -210,9 +212,19 @@ public class CrystalEggFactory extends JavaPlugin {
 									int inventorySpace = this.countFreeInventorySpace(p);
 									if(amount <= inventorySpace) {
 			//#####################################################################################
-										
-										for(int i = 0; i < amount; i++)
-											p.getInventory().addItem(map.get(mobType));
+										ItemStack iss = map.get(mobType);
+										ItemMeta imm = iss.getItemMeta();
+										imm.setDisplayName(ChatColor.BLUE + "CrystalEgg");
+										ArrayList<String> loree = new ArrayList<String>();
+										loree.add(ChatColor.GREEN + "Made In Flory's Secret Factory");
+										loree.add(ChatColor.AQUA + "These Eggs Do Not Change Spawners");
+										imm.setLore(loree);
+										iss.setItemMeta(imm);
+										for(int i = 0; i < amount; i++) {
+											
+											p.getInventory().addItem(iss);
+											
+										}
 										
 										p.sendMessage(ChatColor.GOLD + "Command Executed");
 										return true;
