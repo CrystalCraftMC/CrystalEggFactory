@@ -1,6 +1,6 @@
 name: CrystalEggFactory
 main: com.crystalcraftmc.crystaleggfactory.CrystalEggFactory
-version: 2.0
+version: 2.2
 authors: [Jwood9198, Jacc734, jflory7]
 commands:
    egg:
