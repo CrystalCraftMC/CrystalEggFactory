@@ -1,0 +1,6 @@
+# World Configuration File
+
+overworld: false
+nether: false
+end: false
+OnlyNerfCrystalEggs: true

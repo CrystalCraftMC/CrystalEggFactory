@@ -37,10 +37,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
-/**CrystalEggFactory is an open source plugin designed to grant ops(by default)
- *  the ability to create spawn eggs that do not have the ability to change spawners. 
- *  (A Minecraft 1.8 Feature)
- * 
+/**
+ * CrystalEggFactory is an open source plugin designed to grant ops(by default)
+ * the ability to create spawn eggs that do not have the ability to change spawners.
+ * (A Minecraft 1.8 Feature)
+ *
+ * @author Alex Woodward
+ * @author Justin W. Flory
  */
 public class CrystalEggFactory extends JavaPlugin {
 	
@@ -119,7 +122,7 @@ public class CrystalEggFactory extends JavaPlugin {
 	 * blocks, the event is cancelled*/
 	public static final int NUMCAKES = 5;
 	
-	/**cakes show up CAKEFRAMERATE ticks inbetween eachother*/
+	/**Cakes show up CAKEFRAMERATE ticks in-between each other*/
 	public static final int CAKEFRAMERATE = 5;
 	
 	/**Initialize a mobtype variable*/
@@ -133,6 +136,7 @@ public class CrystalEggFactory extends JavaPlugin {
             // Failed to submit the stats :-(
         }
 
+        //loadConfiguration(File worlds.yml);
 		createFile();
 		this.initializeWorldBan();
 		this.initializePermsFile();
@@ -817,7 +821,7 @@ public class CrystalEggFactory extends JavaPlugin {
 	}
 
 	/**Called to remove a bannedArea
-	 * @param the EggOutlawArea object we're removing from the arraylist
+	 * @param removeArea EggOutlawArea object we're removing from the arraylist
 	 * @return true if the removing was successful
 	 */
 	public boolean removeBanArea(EggOutlawArea removeArea) {
